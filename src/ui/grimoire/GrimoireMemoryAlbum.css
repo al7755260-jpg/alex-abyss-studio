@@ -1,0 +1,592 @@
+.viewer--grimoire-memory .viewer__canvas,
+.viewer--grimoire-memory .game-ui {
+  pointer-events: none;
+}
+
+.grimoire-memory {
+  position: fixed;
+  z-index: 72;
+  inset: 0;
+  min-width: 320px;
+  min-height: 100dvh;
+  overflow: hidden;
+  color: #2b170f;
+  isolation: isolate;
+  animation: grimoire-memory-veil-in 320ms ease-out both;
+}
+
+.grimoire-memory__veil {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    radial-gradient(circle at 76% 39%, rgb(39 112 105 / 12%), transparent 27%),
+    linear-gradient(90deg, rgb(0 0 0 / 5%) 0 42%, rgb(2 4 4 / 24%) 58%, rgb(0 0 0 / 74%) 100%);
+  backdrop-filter: blur(1.5px);
+}
+
+.grimoire-memory__book {
+  position: absolute;
+  top: clamp(84px, 12vh, 108px);
+  right: clamp(32px, 7.5vw, 96px);
+  width: clamp(420px, 41vw, 660px);
+  aspect-ratio: 3 / 2;
+  max-height: calc(100dvh - 124px);
+  background: url('/images/grimoire-memories/demonic-open-book-v1.png') center / 100% 100% no-repeat;
+  filter: drop-shadow(0 30px 45px rgb(0 0 0 / 72%));
+  transform-origin: 82% 28%;
+  animation: grimoire-memory-book-in 380ms cubic-bezier(.16, .78, .2, 1) both;
+}
+
+.grimoire-memory__book::before,
+.grimoire-memory__book::after {
+  position: absolute;
+  content: "";
+  pointer-events: none;
+}
+
+.grimoire-memory__book::before {
+  inset: 3% 2.5%;
+  background:
+    repeating-linear-gradient(84deg, transparent 0 7px, rgb(69 29 13 / 3%) 7px 8px),
+    repeating-linear-gradient(0deg, transparent 0 13px, rgb(255 230 177 / 2%) 13px 14px);
+  mix-blend-mode: multiply;
+  opacity: .48;
+}
+
+.grimoire-memory__book::after {
+  inset: 0;
+  box-shadow:
+    inset 0 0 0 1px rgb(135 177 163 / 16%),
+    inset 0 0 72px rgb(0 0 0 / 42%);
+}
+
+.grimoire-memory__book-light {
+  position: absolute;
+  z-index: 6;
+  inset: 5%;
+  pointer-events: none;
+  background: radial-gradient(circle 150px at 68% 42%, rgb(169 236 220 / 8%), transparent 74%);
+  mix-blend-mode: screen;
+  animation: grimoire-memory-light 5s ease-in-out infinite alternate;
+}
+
+.grimoire-memory__close,
+.grimoire-memory__turn,
+.grimoire-memory__chapters button {
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.grimoire-memory__close {
+  position: absolute;
+  z-index: 12;
+  top: 2.2%;
+  right: 1.5%;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  color: rgb(211 190 146 / 82%);
+  background: radial-gradient(circle, rgb(43 18 13 / 94%), rgb(4 7 7 / 96%) 70%);
+  box-shadow:
+    0 0 0 1px rgb(153 111 67 / 48%),
+    0 8px 20px rgb(0 0 0 / 65%),
+    inset 0 0 12px rgb(111 24 19 / 34%);
+  clip-path: polygon(18% 0, 82% 0, 100% 18%, 100% 82%, 82% 100%, 18% 100%, 0 82%, 0 18%);
+}
+
+.grimoire-memory__close svg {
+  width: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+}
+
+.grimoire-memory__close:hover,
+.grimoire-memory__close:focus-visible,
+.grimoire-memory__turn:hover,
+.grimoire-memory__turn:focus-visible {
+  color: #f0d6a7;
+  outline: 1px solid rgb(203 151 82 / 82%);
+  outline-offset: 3px;
+  filter: brightness(1.15);
+}
+
+.grimoire-memory__left-page,
+.grimoire-memory__right-page {
+  position: absolute;
+  z-index: 3;
+  min-width: 0;
+}
+
+.grimoire-memory__left-page {
+  top: 13%;
+  bottom: 12.5%;
+  left: 10.2%;
+  width: 31.6%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  transform: rotate(-.55deg);
+}
+
+.grimoire-memory__heading {
+  position: relative;
+  padding: 0 4% 6.5%;
+  text-align: center;
+}
+
+.grimoire-memory__heading::after {
+  position: absolute;
+  right: 9%;
+  bottom: 0;
+  left: 9%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(76 35 19 / 58%), transparent);
+  content: "";
+}
+
+.grimoire-memory__heading > span,
+.grimoire-memory__right-page figcaption > span,
+.grimoire-memory__folio-mark {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: .15em;
+}
+
+.grimoire-memory__heading > span {
+  display: block;
+  color: rgb(34 83 75 / 78%);
+  font-size: clamp(7px, .56vw, 10px);
+}
+
+.grimoire-memory__heading h1 {
+  margin: 4px 0 0;
+  color: #351a11;
+  font-family: var(--font-display);
+  font-size: clamp(18px, 1.65vw, 29px);
+  font-weight: 500;
+  letter-spacing: .16em;
+  line-height: 1.1;
+  text-shadow: 0 1px rgb(255 238 188 / 28%);
+}
+
+.grimoire-memory__heading p {
+  margin: 5px 0 0;
+  color: rgb(69 37 22 / 68%);
+  font-family: var(--font-display);
+  font-size: clamp(9px, .72vw, 12px);
+  letter-spacing: .08em;
+}
+
+.grimoire-memory__chapters {
+  display: grid;
+  align-content: center;
+  gap: clamp(3px, .5vw, 8px);
+  padding: 4% 2%;
+}
+
+.grimoire-memory__chapters button {
+  position: relative;
+  display: grid;
+  min-height: 42px;
+  grid-template-columns: clamp(30px, 3.1vw, 48px) 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 5px;
+  padding: 3px 6px 3px 3px;
+  overflow: hidden;
+  color: rgb(66 35 21 / 68%);
+  background: rgb(112 75 38 / 6%);
+  border-block: 1px solid rgb(69 33 19 / 13%);
+  text-align: left;
+  transition: color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.grimoire-memory__chapters button::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgb(93 27 20 / 70%), transparent);
+  content: "";
+  opacity: 0;
+}
+
+.grimoire-memory__chapters button[aria-pressed="true"] {
+  color: #37180f;
+  background: linear-gradient(90deg, rgb(117 40 27 / 17%), transparent);
+  transform: translateX(3px);
+}
+
+.grimoire-memory__chapters button[aria-pressed="true"]::after {
+  opacity: 1;
+}
+
+.grimoire-memory__chapters button:focus-visible {
+  outline: 1px solid rgb(96 45 25 / 78%);
+  outline-offset: 2px;
+}
+
+.grimoire-memory__chapters img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  filter: sepia(.48) saturate(.68) contrast(1.08) brightness(.78);
+  box-shadow: 0 2px 5px rgb(34 13 6 / 35%);
+  clip-path: polygon(2% 3%, 98% 0, 100% 96%, 4% 100%, 0 56%);
+}
+
+.grimoire-memory__chapters button > span {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: clamp(8px, .64vw, 10px);
+}
+
+.grimoire-memory__chapters button > strong {
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: clamp(10px, .78vw, 13px);
+  font-weight: 500;
+  letter-spacing: .05em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grimoire-memory__folio-mark {
+  margin: 0;
+  color: rgb(67 80 60 / 48%);
+  font-size: clamp(7px, .56vw, 10px);
+  text-align: center;
+}
+
+.grimoire-memory__right-page {
+  top: 14%;
+  right: 5%;
+  bottom: 11.5%;
+  width: 44%;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 3%;
+  margin: 0;
+  transform: rotate(.3deg);
+  animation: grimoire-memory-page-in 340ms cubic-bezier(.2, .7, .2, 1) both;
+}
+
+.grimoire-memory__photo-mat {
+  position: relative;
+  min-height: 0;
+  padding: clamp(4px, .55vw, 9px);
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgb(37 15 10 / 91%), rgb(74 45 25 / 78%)),
+    #26160d;
+  box-shadow:
+    0 8px 18px rgb(34 13 7 / 39%),
+    0 0 0 1px rgb(59 25 14 / 72%),
+    0 0 0 3px rgb(202 159 90 / 13%);
+  clip-path: polygon(1.8% 0, 98.5% 1.4%, 100% 96%, 96.4% 100%, 2.4% 98.6%, 0 4%);
+}
+
+.grimoire-memory__photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #21130d;
+  filter: sepia(.28) saturate(.78) contrast(1.08) brightness(.9);
+  user-select: none;
+}
+
+.grimoire-memory__photo-wear {
+  position: absolute;
+  inset: clamp(4px, .55vw, 9px);
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 19% 16%, transparent 0 31%, rgb(41 18 10 / 13%) 79%, rgb(19 9 6 / 41%) 100%),
+    repeating-linear-gradient(102deg, transparent 0 29px, rgb(247 220 168 / 7%) 30px, transparent 31px 47px);
+  box-shadow: inset 0 0 22px rgb(35 13 8 / 46%);
+  mix-blend-mode: multiply;
+}
+
+.grimoire-memory__right-page figcaption {
+  position: relative;
+  min-width: 0;
+  padding: 0 4% 2%;
+  text-align: center;
+}
+
+.grimoire-memory__right-page figcaption::before {
+  display: block;
+  width: 54%;
+  height: 1px;
+  margin: 0 auto 5px;
+  background: linear-gradient(90deg, transparent, rgb(83 31 18 / 52%), transparent);
+  content: "";
+}
+
+.grimoire-memory__right-page figcaption > span {
+  display: block;
+  color: rgb(47 90 78 / 75%);
+  font-size: clamp(7px, .56vw, 10px);
+}
+
+.grimoire-memory__right-page figcaption strong {
+  display: block;
+  margin-top: 2px;
+  color: #3b1b11;
+  font-family: var(--font-display);
+  font-size: clamp(12px, 1.12vw, 20px);
+  font-weight: 500;
+  letter-spacing: .14em;
+}
+
+.grimoire-memory__right-page figcaption small {
+  display: block;
+  margin-top: 1px;
+  color: rgb(68 36 21 / 74%);
+  font-family: var(--font-display);
+  font-size: clamp(8px, .62vw, 11px);
+  letter-spacing: .08em;
+}
+
+.grimoire-memory__turn {
+  position: absolute;
+  z-index: 10;
+  top: 48%;
+  display: grid;
+  width: 42px;
+  height: 46px;
+  place-items: center;
+  color: rgb(208 176 120 / 76%);
+  background: linear-gradient(180deg, rgb(33 14 10 / 92%), rgb(4 8 8 / 94%));
+  box-shadow: 0 8px 20px rgb(0 0 0 / 55%), inset 0 0 12px rgb(102 24 19 / 28%);
+  clip-path: polygon(25% 0, 100% 15%, 100% 85%, 25% 100%, 0 50%);
+  transform: translateY(-50%);
+}
+
+.grimoire-memory__turn svg {
+  width: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.2;
+}
+
+.grimoire-memory__turn--previous {
+  left: 1.3%;
+}
+
+.grimoire-memory__turn--previous svg {
+  transform: rotate(-90deg);
+}
+
+.grimoire-memory__turn--next {
+  right: 1.3%;
+  transform: translateY(-50%) scaleX(-1);
+}
+
+.grimoire-memory__turn--next svg {
+  transform: rotate(-90deg);
+}
+
+.grimoire-memory__page-dots {
+  position: absolute;
+  z-index: 8;
+  right: 21.5%;
+  bottom: 4.5%;
+  display: flex;
+  gap: 5px;
+  transform: translateX(50%);
+}
+
+.grimoire-memory__page-dots i {
+  display: block;
+  width: 13px;
+  height: 2px;
+  background: rgb(69 34 20 / 26%);
+  transition: background 180ms ease, transform 180ms ease;
+}
+
+.grimoire-memory__page-dots i[data-active="true"] {
+  background: rgb(107 30 22 / 80%);
+  transform: scaleX(1.28);
+}
+
+@keyframes grimoire-memory-veil-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes grimoire-memory-book-in {
+  from {
+    opacity: 0;
+    filter: blur(8px) drop-shadow(0 30px 45px rgb(0 0 0 / 72%));
+    transform: translate3d(18px, -4px, 0) scale(.965) rotate(.4deg);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0) drop-shadow(0 30px 45px rgb(0 0 0 / 72%));
+    transform: translate3d(0, 0, 0) scale(1) rotate(0);
+  }
+}
+
+@keyframes grimoire-memory-page-in {
+  from {
+    opacity: 0;
+    transform: translateX(8px) rotate(.9deg) scale(.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) rotate(.3deg) scale(1);
+  }
+}
+
+@keyframes grimoire-memory-light {
+  from { opacity: .45; }
+  to { opacity: .9; }
+}
+
+@media (max-width: 1120px) {
+  .grimoire-memory__book {
+    top: 80px;
+    right: 24px;
+    width: clamp(380px, 42vw, 500px);
+  }
+}
+
+@media (max-width: 720px) {
+  .grimoire-memory__veil {
+    background: rgb(1 4 4 / 78%);
+    backdrop-filter: blur(4px);
+  }
+
+  .grimoire-memory__book {
+    top: auto;
+    right: 12px;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px - env(safe-area-inset-bottom));
+  }
+
+  .grimoire-memory__close {
+    top: 0;
+    right: 0;
+  }
+
+  .grimoire-memory__heading > span,
+  .grimoire-memory__folio-mark {
+    display: none;
+  }
+
+  .grimoire-memory__heading h1 {
+    font-size: clamp(17px, 5vw, 23px);
+  }
+
+  .grimoire-memory__heading p {
+    font-size: clamp(7px, 2.2vw, 10px);
+  }
+
+  .grimoire-memory__chapters button {
+    grid-template-columns: clamp(27px, 9vw, 38px) 15px minmax(0, 1fr);
+    min-height: 36px;
+  }
+
+  .grimoire-memory__chapters button > strong {
+    font-size: clamp(8px, 2.3vw, 11px);
+  }
+
+  .grimoire-memory__right-page figcaption strong {
+    font-size: clamp(12px, 3.4vw, 17px);
+  }
+}
+
+@media (max-width: 520px), (max-height: 560px) {
+  .grimoire-memory {
+    overflow-y: auto;
+  }
+
+  .grimoire-memory__book {
+    position: relative;
+    top: max(8px, env(safe-area-inset-top));
+    right: auto;
+    bottom: auto;
+    width: calc(100vw - 16px);
+    min-height: min(74dvh, 560px);
+    margin: 0 8px max(8px, env(safe-area-inset-bottom));
+    aspect-ratio: auto;
+    background-size: cover;
+  }
+
+  .grimoire-memory__left-page {
+    top: 8%;
+    right: 9%;
+    bottom: auto;
+    left: 9%;
+    width: auto;
+    height: 19%;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    transform: none;
+  }
+
+  .grimoire-memory__heading {
+    padding-bottom: 3%;
+  }
+
+  .grimoire-memory__chapters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    padding: 2px 1%;
+  }
+
+  .grimoire-memory__chapters button {
+    grid-template-columns: 30px minmax(0, 1fr);
+    min-height: 34px;
+  }
+
+  .grimoire-memory__chapters button > span {
+    display: none;
+  }
+
+  .grimoire-memory__right-page {
+    top: 31%;
+    right: 11%;
+    bottom: 12%;
+    left: 11%;
+    width: auto;
+    transform: none;
+  }
+
+  .grimoire-memory__photo-mat {
+    padding: 7px;
+  }
+
+  .grimoire-memory__photo-wear {
+    inset: 7px;
+  }
+
+  .grimoire-memory__turn {
+    top: 60%;
+  }
+
+  .grimoire-memory__turn--previous { left: 2%; }
+  .grimoire-memory__turn--next { right: 2%; }
+
+  .grimoire-memory__page-dots {
+    right: 50%;
+    bottom: 5%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grimoire-memory,
+  .grimoire-memory__book,
+  .grimoire-memory__book-light,
+  .grimoire-memory__right-page {
+    animation: none !important;
+  }
+
+  .grimoire-memory__chapters button,
+  .grimoire-memory__page-dots i {
+    transition: none;
+  }
+}

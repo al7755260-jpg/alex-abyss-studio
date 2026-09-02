@@ -1,0 +1,23 @@
+node_modules/
+dist/
+*.local
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+
+# Tripo 原始生成物和任务记录仅用于本地制作；优化后的成品放入 public/models/。
+raw-models/tripo/
+
+# Local production sources, optimization caches, and recoverable deploy backups.
+raw-models/
+.optimized-assets/
+.deploy-backup/
+work/
+packaging/
+
+# Local QA captures are not needed by the runtime deployment.
+/qa-*.png
