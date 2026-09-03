@@ -1,6 +1,8 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { type HiddenRelicId } from './data/hiddenRelics'
 import { STUDIO_ASSETS } from './data/studioAssets'
+import publishedScene from './data/publishedScene.json'
+import { resolveSceneSnapshot } from './editor/studioSceneSnapshot'
 import {
   isSceneInscriptionId,
   SCENE_INSCRIPTION_BY_ID,
@@ -60,10 +62,8 @@ import { useRelicMystery } from './game/useRelicMystery'
 import { StudioCanvas, type StudioCanvasHandle } from './scene/StudioCanvas'
 import { StormAtmosphere } from './ui/atmosphere/StormAtmosphere'
 import { GameHUD } from './ui/game/GameHUD'
-import {
-  StudioEditorControl,
-  type StudioEditorSection,
-} from './ui/editor/StudioEditorControl'
+import type { StudioEditorSection } from './ui/editor/StudioEditorControl'
+import { StudioEditorLauncher } from './ui/editor/StudioEditorLauncher'
 import { StudioTextLayerProvider } from './ui/editor/StudioTextLayer'
 import { LoadingOverlay } from './ui/LoadingOverlay'
 
@@ -86,6 +86,14 @@ const STUDIO_TEXT_LAYER_IDS = [
   ...STUDIO_ASSETS.map((asset) => `asset-label:${asset.id}`),
 ]
 const DEFAULT_STUDIO_TEXT_LAYOUT = createDefaultStudioTextLayout(STUDIO_TEXT_LAYER_IDS)
+// The published composition is bundled with the site; local drafts still win.
+// Keep DEFAULT_STUDIO_LAYOUT as the original attachment coordinate reference.
+const PUBLISHED_STUDIO_SCENE = resolveSceneSnapshot(publishedScene, {
+  layout: DEFAULT_STUDIO_LAYOUT,
+  copy: DEFAULT_STUDIO_COPY,
+  textLayout: DEFAULT_STUDIO_TEXT_LAYOUT,
+  lighting: DEFAULT_STUDIO_LIGHTING,
+})
 const STUDIO_ASSET_BY_ID = new Map(STUDIO_ASSETS.map((asset) => [asset.id, asset] as const))
 const STUDIO_SCENE_INSCRIPTION_OPTIONS = SCENE_INSCRIPTIONS.map((inscription) => ({
   id: inscription.id,
@@ -100,6 +108,12 @@ const LIGHTING_AUTO_SAVE_DELAY_MS = 220
 const DreamArchive = lazy(() => import('./ui/ideas/DreamArchive'))
 const GrimoireMemoryAlbum = lazy(() => import('./ui/grimoire/GrimoireMemoryAlbum'))
 const TelevisionTransmission = lazy(() => import('./ui/television/TelevisionTransmission'))
+const StudioEditorControl = lazy(() => import('./ui/editor/StudioEditorControl').then(
+  (module) => ({ default: module.StudioEditorControl }),
+))
+const StudioSceneExport = lazy(() => import('./ui/editor/StudioSceneExport').then(
+  (module) => ({ default: module.StudioSceneExport }),
+))
 
 const STUDIO_TEXT_LAYER_LABELS: Record<StudioCopyField, string> = {
   brandTitle: '主标题',
@@ -138,7 +152,7 @@ export default function App() {
   const [lightingSaveState, setLightingSaveState] = useState<'idle' | 'saved' | 'error'>('idle')
   const [editorState, dispatchEditor] = useReducer(
     studioEditorReducer,
-    DEFAULT_STUDIO_LAYOUT,
+    PUBLISHED_STUDIO_SCENE.layout,
     (defaults) => createStudioEditorState(
       defaults,
       loadStudioLayout(
@@ -150,7 +164,7 @@ export default function App() {
   )
   const [textEditorState, dispatchTextEditor] = useReducer(
     studioTextEditorReducer,
-    DEFAULT_STUDIO_TEXT_LAYOUT,
+    PUBLISHED_STUDIO_SCENE.textLayout,
     (defaults) => createStudioTextEditorState(
       defaults,
       loadStudioTextLayout(
@@ -161,7 +175,7 @@ export default function App() {
   )
   const [studioCopy, setStudioCopy] = useState<StudioCopy>(() => loadStudioCopy(
     typeof window === 'undefined' ? null : window.localStorage,
-    DEFAULT_STUDIO_COPY,
+    PUBLISHED_STUDIO_SCENE.copy,
   ))
   const [savedStudioCopy, setSavedStudioCopy] = useState<StudioCopy>(() => studioCopy)
   const studioSceneCopy = useMemo(() => ({
@@ -182,7 +196,7 @@ export default function App() {
   const [studioLighting, setStudioLighting] = useState<StudioLightingSettings>(() => (
     loadStudioLighting(
       typeof window === 'undefined' ? null : window.localStorage,
-      DEFAULT_STUDIO_LIGHTING,
+      PUBLISHED_STUDIO_SCENE.lighting,
     )
   ))
   const [savedStudioLighting, setSavedStudioLighting] = useState<StudioLightingSettings>(
@@ -915,7 +929,8 @@ export default function App() {
         copy={studioCopy}
         onOpenRelic={requestOpenRelic}
         editingLayout={editingTransforms}
-        editorControl={(
+        editorControl={editingLayout ? (
+          <Suspense fallback={<StudioEditorLauncher onOpen={toggleLayoutEditor} loading />}>
           <StudioEditorControl
             enabled={editingLayout}
             section={editorSection}
@@ -969,8 +984,20 @@ export default function App() {
             onScaleStep={scaleSelectedAsset}
             onUndo={undoLayoutChange}
             onSave={saveLayout}
+            sceneExport={(
+              <Suspense fallback={null}>
+                <StudioSceneExport snapshot={{
+                  schemaVersion: 1,
+                  layout: editorState.draft,
+                  copy: studioCopy,
+                  textLayout: textEditorState.draft,
+                  lighting: studioLighting,
+                }} />
+              </Suspense>
+            )}
           />
-        )}
+          </Suspense>
+        ) : <StudioEditorLauncher onOpen={toggleLayoutEditor} />}
         onResetCamera={resetCamera}
       />
 

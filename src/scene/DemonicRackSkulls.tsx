@@ -139,5 +139,3 @@ export function DemonicRackSkulls() {
     </group>
   )
 }
-
-RACK_SKULL_SPECS.forEach((spec) => useGLTF.preload(spec.src))

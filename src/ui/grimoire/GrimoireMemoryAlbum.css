@@ -32,7 +32,7 @@
   width: clamp(420px, 41vw, 660px);
   aspect-ratio: 3 / 2;
   max-height: calc(100dvh - 124px);
-  background: url('/images/grimoire-memories/demonic-open-book-v1.png') center / 100% 100% no-repeat;
+  background: url('/images/grimoire-memories/demonic-open-book-v1.webp') center / 100% 100% no-repeat;
   filter: drop-shadow(0 30px 45px rgb(0 0 0 / 72%));
   transform-origin: 82% 28%;
   animation: grimoire-memory-book-in 380ms cubic-bezier(.16, .78, .2, 1) both;

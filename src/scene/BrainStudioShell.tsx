@@ -53,5 +53,3 @@ export function BrainStudioShell() {
     </group>
   )
 }
-
-useGLTF.preload(MODEL_URL)

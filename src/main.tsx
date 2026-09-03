@@ -4,7 +4,7 @@ import App from './App'
 import { installGlbFetchScheduler } from './net/glbFetchScheduler'
 import './styles.css'
 
-installGlbFetchScheduler()
+installGlbFetchScheduler({ assetRevision: 'webp-20260903' })
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

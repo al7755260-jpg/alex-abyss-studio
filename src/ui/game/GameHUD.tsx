@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { lazy, Suspense, type ReactNode } from 'react'
 import {
   HIDDEN_RELIC_BY_ID,
   type HiddenRelicId,
@@ -11,10 +11,15 @@ import {
   AbyssMark,
   ResetIcon,
 } from './GameIcons'
-import { ArtifactDetailHUD } from './ArtifactDetailHUD'
-import { FinaleSequence } from './FinaleSequence'
 import { RelicArchiveBar } from './RelicArchiveBar'
 import { SanityMeter } from './SanityMeter'
+
+const ArtifactDetailHUD = lazy(() => import('./ArtifactDetailHUD').then(
+  (module) => ({ default: module.ArtifactDetailHUD }),
+))
+const FinaleSequence = lazy(() => import('./FinaleSequence').then(
+  (module) => ({ default: module.FinaleSequence }),
+))
 
 type GameHUDProps = {
   mystery: RelicMystery
@@ -106,20 +111,24 @@ export function GameHUD({
       ) : null}
 
       {activeRelic ? (
+        <Suspense fallback={null}>
         <ArtifactDetailHUD
           key={activeRelic.id}
           relic={activeRelic}
           onReturn={actions.returnToStudio}
         />
+        </Suspense>
       ) : null}
 
       {state.view.kind === 'finale' ? (
+        <Suspense fallback={null}>
         <FinaleSequence
           alreadyCompleted={state.endingCompleted}
           onComplete={actions.completeFinale}
           onReturn={actions.returnToStudio}
           onRestart={actions.resetGame}
         />
+        </Suspense>
       ) : null}
 
       <p className="game-ui__announcer" aria-live="polite">

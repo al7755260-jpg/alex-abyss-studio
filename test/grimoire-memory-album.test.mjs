@@ -54,14 +54,14 @@ test('失落相册完整展示三张原始照片并提供键盘和焦点保护',
 test('ImageGen恶魔书页背景和三张照片都已固化为项目资产', async () => {
   const css = await source('src/ui/grimoire/GrimoireMemoryAlbum.css')
   const assets = [
-    'public/images/grimoire-memories/demonic-open-book-v1.png',
-    'public/images/grimoire-memories/memory-01-water.jpg',
+    'public/images/grimoire-memories/demonic-open-book-v1.webp',
+    'public/images/grimoire-memories/memory-01-water.webp',
     'public/images/grimoire-memories/memory-02-rain.jpg',
     'public/images/grimoire-memories/memory-03-city.jpg',
   ]
 
   await Promise.all(assets.map((asset) => access(new URL(`../${asset}`, import.meta.url))))
-  assert.match(css, /demonic-open-book-v1\.png/)
+  assert.match(css, /demonic-open-book-v1\.webp/)
   assert.match(css, /filter: sepia\(\.28\) saturate\(\.78\)/)
   assert.match(css, /@media \(max-width: 720px\)/)
   assert.match(css, /@media \(max-width: 520px\), \(max-height: 560px\)/)

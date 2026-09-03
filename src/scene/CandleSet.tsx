@@ -504,11 +504,7 @@ export function CandelabraInstallation({
   )
 }
 
-const STATIC_CANDLE_MODEL_URLS: [string, string, string] = [
-  CANDLE_MODEL_URLS.pillar,
-  CANDLE_MODEL_URLS.skull,
-  CANDLE_MODEL_URLS.cluster,
-]
+const STATIC_CANDLE_KINDS: readonly StaticCandleKind[] = ['pillar', 'skull', 'cluster']
 
 type CandleModelsBoundaryProps = {
   children: ReactNode
@@ -545,25 +541,16 @@ class CandleModelsErrorBoundary extends Component<
   }
 }
 
-function CandleModels() {
-  const [pillar, skull, cluster] = useGLTF(STATIC_CANDLE_MODEL_URLS)
-
-  const sources = useMemo<Readonly<Record<StaticCandleKind, Group>>>(
-    () => ({
-      pillar: pillar.scene,
-      skull: skull.scene,
-      cluster: cluster.scene,
-    }),
-    [cluster.scene, pillar.scene, skull.scene],
-  )
+function CandleModels({ kind }: { kind: StaticCandleKind }) {
+  const { scene } = useGLTF(CANDLE_MODEL_URLS[kind])
 
   return (
     <>
-      {CANDLE_PLACEMENTS.map((placement) => (
+      {CANDLE_PLACEMENTS.filter((placement) => placement.kind === kind).map((placement) => (
         <CandleModel
           key={placement.id}
           placement={placement}
-          source={sources[placement.kind]}
+          source={scene}
         />
       ))}
     </>
@@ -573,11 +560,13 @@ function CandleModels() {
 export function CandleSet({ active = true }: { active?: boolean }) {
   return (
     <group name="lux3d-candle-set">
-      <CandleModelsErrorBoundary>
-        <Suspense fallback={null}>
-          <CandleModels />
-        </Suspense>
-      </CandleModelsErrorBoundary>
+      {STATIC_CANDLE_KINDS.map((kind) => (
+        <CandleModelsErrorBoundary key={kind}>
+          <Suspense fallback={null}>
+            <CandleModels kind={kind} />
+          </Suspense>
+        </CandleModelsErrorBoundary>
+      ))}
       <CandleFlames active={active} />
     </group>
   )

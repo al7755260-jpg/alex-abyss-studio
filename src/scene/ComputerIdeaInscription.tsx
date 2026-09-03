@@ -1,4 +1,3 @@
-import { useGLTF } from '@react-three/drei'
 import { forwardRef } from 'react'
 import type { Group } from 'three'
 import type { StudioTransform } from '../editor/studioLayout'
@@ -48,5 +47,3 @@ export const ComputerIdeaInscription = forwardRef<Group, ComputerIdeaInscription
     )
   },
 )
-
-useGLTF.preload(MODEL_URL)

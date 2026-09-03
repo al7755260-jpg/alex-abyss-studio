@@ -1,5 +1,6 @@
 import {
   forwardRef,
+  lazy,
   memo,
   Suspense,
   useCallback,
@@ -55,7 +56,6 @@ import type { StudioTextLayout } from '../editor/studioTextLayout'
 import type { MysteryView } from '../game/mysteryState'
 import { StudioTextLayerProvider } from '../ui/editor/StudioTextLayer'
 import { AssetSlot } from './AssetSlot'
-import { ArtifactDetailScene } from './ArtifactDetailScene'
 import {
   DETAIL_CENTER,
   DETAIL_INITIAL_CAMERA_DISTANCE,
@@ -89,6 +89,15 @@ import { RendererExposureController, StudioLighting } from './StudioLighting'
 import { StudioLightingSettingsProvider } from './StudioLightingSettingsContext'
 import { VideoBeyondScreenInscription } from './VideoBeyondScreenInscription'
 import { resolveChairSwivelPoint } from './chairRotation'
+
+const ArtifactDetailScene = lazy(() => import('./ArtifactDetailScene').then((module) => ({
+  default: module.ArtifactDetailScene,
+})))
+
+function markSceneMilestone(name: string) {
+  if (typeof performance === 'undefined' || !performance.mark) return
+  if (performance.getEntriesByName(name).length === 0) performance.mark(name)
+}
 
 export type StudioCanvasHandle = {
   resetCamera: () => void
@@ -265,6 +274,7 @@ function CameraIntroReady({
   cameraReturnRef: MutableRefObject<CameraReturnState | null>
 }) {
   useEffect(() => {
+    markSceneMilestone('studio:head-committed')
     const intro = cameraReturnRef.current
     if (intro?.kind === 'intro' && intro.phase === 'waiting') {
       cameraReturnRef.current = { kind: 'intro', phase: 'running', elapsed: 0 }
@@ -575,6 +585,9 @@ function StudioShadowMapController({
   // for their entrance animation; the studio refreshes only on completed loads.
   useEffect(() => {
     const unsubscribe = useProgress.subscribe((state, previousState) => {
+      if (!dynamic && !state.active && state.total > 0 && state.loaded === state.total) {
+        markSceneMilestone('studio:assets-loaded')
+      }
       if (
         state.loaded === previousState.loaded &&
         state.total === previousState.total
@@ -834,7 +847,9 @@ function StudioScene({
     <>
       <RendererExposureController />
       {detailRelic ? (
-        <ArtifactDetailScene key={detailRelic.id} relic={detailRelic} />
+        <Suspense fallback={null}>
+          <ArtifactDetailScene key={detailRelic.id} relic={detailRelic} />
+        </Suspense>
       ) : (
         <>
           <color attach="background" args={['#030506']} />

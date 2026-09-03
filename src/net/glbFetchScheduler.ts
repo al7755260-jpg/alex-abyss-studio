@@ -4,6 +4,7 @@ export interface GlbFetchSchedulerOptions {
   maxConcurrent?: number
   maxRetries?: number
   baseUrl?: string
+  assetRevision?: string
 }
 
 export interface GlbFetchHost {
@@ -17,6 +18,7 @@ export interface InstallGlbFetchSchedulerOptions extends GlbFetchSchedulerOption
 
 interface QueueEntry {
   signal?: AbortSignal
+  priority: number
   started: boolean
   run: () => Promise<Response>
   resolve: (response: Response) => void
@@ -66,6 +68,21 @@ const requestUrl = (input: RequestInfo | URL) => {
   return input.url
 }
 
+const withAssetRevision = (
+  input: RequestInfo | URL,
+  baseUrl: string | undefined,
+  assetRevision: string | undefined,
+): RequestInfo | URL => {
+  if (!assetRevision) return input
+
+  const url = new URL(requestUrl(input), baseUrl)
+  // A deploy-stable revision refreshes old heavy cached models exactly once;
+  // repeat visits still reuse cache and existing animation/PBR query keys.
+  url.searchParams.set('assetRevision', assetRevision)
+  if (input instanceof Request) return new Request(url, input)
+  return input instanceof URL ? url : url.href
+}
+
 const isSameOriginGlb = (
   input: RequestInfo | URL,
   baseUrl: string | undefined,
@@ -81,14 +98,35 @@ const isSameOriginGlb = (
   }
 }
 
+// Only queue order changes: every requested model still loads. The portrait
+// and the large furniture establish the first view before tiny ornaments.
+// User-opened relics can jump queued scenery, without aborting active loads.
+export const glbLoadPriority = (pathname: string) => {
+  const path = pathname.toLowerCase()
+  if (/\/models\/(?:hidden-relics|ui)\//.test(path)) return -1
+  if (/\/environment\/alex-mechanical-open-head-optimized\.glb$/.test(path)) return 0
+  if (/\/(?:desk|chair|bookcase|cabinet|demonic-cthulhu-display-rack)-optimized\.glb$/.test(path)) return 1
+  if (/\/(?:display-skulls|candles)\//.test(path) || /-note-optimized\.glb$/.test(path)) return 3
+  return 2
+}
+
 const verifyResponseBody = async (response: Response, signal?: AbortSignal) => {
   if (response.body === null) return
 
+  const reader = response.clone().body!.getReader()
   try {
-    await withAbort(response.clone().arrayBuffer(), signal)
+    // Drain the verification branch chunk by chunk. arrayBuffer() here would
+    // allocate an extra full-size model copy, in addition to the original
+    // response buffered for GLTFLoader, across four concurrent downloads.
+    while (!(await withAbort(reader.read(), signal)).done) {
+      // Reading the entire body keeps interrupted transfers retryable.
+    }
   } catch (error) {
+    void reader.cancel().catch(() => undefined)
     void response.body.cancel().catch(() => undefined)
     throw error
+  } finally {
+    reader.releaseLock()
   }
 }
 
@@ -98,6 +136,7 @@ export const createGlbFetchScheduler = (
     maxConcurrent = 4,
     maxRetries = 2,
     baseUrl = globalThis.location?.href,
+    assetRevision,
   }: GlbFetchSchedulerOptions = {},
 ): typeof fetch => {
   assertNonNegativeInteger(maxConcurrent, 'maxConcurrent')
@@ -108,19 +147,21 @@ export const createGlbFetchScheduler = (
 
   const queue: QueueEntry[] = []
   let activeCount = 0
+  let pumpScheduled = false
 
   const fetchWithRetries = async (
     input: RequestInfo | URL,
     init?: RequestInit,
   ) => {
     const signal = requestSignal(input, init)
+    const revisedInput = withAssetRevision(input, baseUrl, assetRevision)
 
     for (let attempt = 0; ; attempt += 1) {
       if (signal?.aborted) throw abortReason(signal)
 
       try {
         const response = await withAbort(
-          Promise.resolve(fetchImplementation(input, init)),
+          Promise.resolve(fetchImplementation(revisedInput, init)),
           signal,
         )
         await verifyResponseBody(response, signal)
@@ -134,6 +175,7 @@ export const createGlbFetchScheduler = (
   }
 
   const pump = () => {
+    pumpScheduled = false
     while (activeCount < maxConcurrent && queue.length > 0) {
       const entry = queue.shift()!
       if (entry.queuedAbortListener && entry.signal) {
@@ -164,6 +206,7 @@ export const createGlbFetchScheduler = (
     return new Promise<Response>((resolve, reject) => {
       const entry: QueueEntry = {
         signal,
+        priority: glbLoadPriority(new URL(requestUrl(input), baseUrl).pathname),
         started: false,
         run: () => fetchWithRetries(input, init),
         resolve,
@@ -180,8 +223,16 @@ export const createGlbFetchScheduler = (
         signal.addEventListener('abort', entry.queuedAbortListener, { once: true })
       }
 
-      queue.push(entry)
-      pump()
+      const insertAt = queue.findIndex((queued) => queued.priority > entry.priority)
+      if (insertAt < 0) queue.push(entry)
+      else queue.splice(insertAt, 0, entry)
+
+      // Batch the synchronous first React render so the first four slots are
+      // selected by visual priority, not by module/component import order.
+      if (!pumpScheduled) {
+        pumpScheduled = true
+        queueMicrotask(pump)
+      }
     })
   }) as typeof fetch
 }
@@ -197,6 +248,7 @@ export const installGlbFetchScheduler = ({
     baseUrl: schedulerOptions.baseUrl ?? host.location?.href,
     maxConcurrent: schedulerOptions.maxConcurrent,
     maxRetries: schedulerOptions.maxRetries,
+    assetRevision: schedulerOptions.assetRevision,
   }) as typeof fetch & Record<symbol, unknown>
 
   Object.defineProperty(scheduledFetch, INSTALL_MARKER, { value: true })

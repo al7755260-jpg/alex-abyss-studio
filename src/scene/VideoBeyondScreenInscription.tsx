@@ -1,4 +1,3 @@
-import { useGLTF } from '@react-three/drei'
 import { forwardRef } from 'react'
 import type { Group } from 'three'
 import type { StudioTransform } from '../editor/studioLayout'
@@ -49,5 +48,3 @@ export const VideoBeyondScreenInscription = forwardRef<
     />
   )
 })
-
-useGLTF.preload(MODEL_URL)

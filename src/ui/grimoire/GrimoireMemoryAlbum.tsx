@@ -13,7 +13,7 @@ const MEMORY_ASSET_ROOT = `${import.meta.env.BASE_URL}images/grimoire-memories`
 const MEMORY_PAGES = [
   {
     id: 'water',
-    src: `${MEMORY_ASSET_ROOT}/memory-01-water.jpg`,
+    src: `${MEMORY_ASSET_ROOT}/memory-01-water.webp`,
     title: '水幕留影',
     alt: '三位同行者在水上游乐设施中的合影',
     objectPosition: '50% 53%',

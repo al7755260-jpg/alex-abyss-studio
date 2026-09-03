@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import {
   STUDIO_ASSET_LABEL_MAX_LENGTH,
   STUDIO_COPY_FIELD_LIMITS,
@@ -10,6 +11,7 @@ import {
   type StudioLightingField,
   type StudioLightingSettings,
 } from '../../editor/studioLighting'
+import { EditLayoutIcon } from './StudioEditorLauncher'
 
 export type StudioEditorSection = 'layout' | 'copy' | 'lighting'
 
@@ -70,6 +72,7 @@ type StudioEditorControlProps = {
   onScaleStep: (direction: -1 | 1) => void
   onUndo: () => void
   onSave: () => void
+  sceneExport?: ReactNode
 }
 
 type CopyFieldDefinition = {
@@ -148,16 +151,6 @@ function formatLightingValue(field: StudioLightingField, value: number) {
     : `${Math.round(value * 100)}%`
 }
 
-function EditLayoutIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 7V4h3M17 4h3v3M20 17v3h-3M7 20H4v-3" />
-      <path d="M8 12h8M12 8v8" />
-      <path d="m14.5 9.5 2-2M14.5 14.5l2 2M9.5 14.5l-2 2M9.5 9.5l-2-2" />
-    </svg>
-  )
-}
-
 export function StudioEditorControl({
   enabled,
   section,
@@ -208,6 +201,7 @@ export function StudioEditorControl({
   onScaleStep,
   onUndo,
   onSave,
+  sceneExport,
 }: StudioEditorControlProps) {
   const selectedSceneInscription = sceneInscriptionOptions.find(
     (inscription) => inscription.id === selectedSceneInscriptionId,
@@ -670,6 +664,7 @@ export function StudioEditorControl({
             <i aria-hidden="true" />
             {status}
           </div>
+          {sceneExport}
         </section>
       ) : null}
     </div>

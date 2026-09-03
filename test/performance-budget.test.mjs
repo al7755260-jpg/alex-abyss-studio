@@ -131,7 +131,8 @@ test('运行时使用自适应 DPR、单阴影灯和轻量鼠标代理', async (
   assert.match(detail, /if \(entranceCompleteRef\.current\) return/)
   assert.match(detail, /if \(!entrance \|\| entranceCompleteRef\.current\) return/)
 
-  assert.match(candles, /useGLTF\(STATIC_CANDLE_MODEL_URLS\)/)
+  assert.match(candles, /useGLTF\(CANDLE_MODEL_URLS\[kind\]\)/)
+  assert.match(candles, /STATIC_CANDLE_KINDS: readonly StaticCandleKind\[\] = \['pillar', 'skull', 'cluster'\]/)
   assert.match(candles, /class CandleModelsErrorBoundary extends Component/)
   assert.match(candles, /static getDerivedStateFromError\(\): CandleModelsBoundaryState/)
   assert.match(candles, /if \(this\.hasWarned\) return/)
@@ -141,7 +142,7 @@ test('运行时使用自适应 DPR、单阴影灯和轻量鼠标代理', async (
   )
   assert.match(
     candles,
-    /<CandleModelsErrorBoundary>\s*<Suspense fallback=\{null\}>\s*<CandleModels \/>\s*<\/Suspense>\s*<\/CandleModelsErrorBoundary>\s*<CandleFlames active=\{active\} \/>/,
+    /STATIC_CANDLE_KINDS\.map\(\(kind\) => \(\s*<CandleModelsErrorBoundary key=\{kind\}>\s*<Suspense fallback=\{null\}>\s*<CandleModels kind=\{kind\} \/>\s*<\/Suspense>\s*<\/CandleModelsErrorBoundary>\s*\)\)\}\s*<CandleFlames active=\{active\} \/>/,
   )
   assert.equal((candles.match(/<instancedMesh/g) ?? []).length, 2)
   assert.doesNotMatch(candles, /cloneMaterial/)

@@ -1,0 +1,566 @@
+{
+  "schemaVersion": 1,
+  "layout": {
+    "abyssal-desk": {
+      "position": [
+        -0.2,
+        0,
+        -1.45
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    "vertebral-chair": {
+      "position": [
+        -0.95,
+        0,
+        0.125
+      ],
+      "rotation": [
+        0,
+        0.872665,
+        0
+      ],
+      "scale": [
+        1.35,
+        1.35,
+        1.35
+      ]
+    },
+    "watching-monitor": {
+      "position": [
+        -0.46,
+        1.798,
+        -1.875
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    "reliquary-computer": {
+      "position": [
+        0.8,
+        1.801,
+        -1.475
+      ],
+      "rotation": [
+        0,
+        -1.570796,
+        0
+      ],
+      "scale": [
+        1.2,
+        1.2,
+        1.2
+      ]
+    },
+    "eldritch-keyboard": {
+      "position": [
+        -0.425,
+        1.795,
+        -1.2
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    "forbidden-bookcase": {
+      "position": [
+        -1.225,
+        0,
+        -4.05
+      ],
+      "rotation": [
+        0,
+        0.28,
+        0
+      ],
+      "scale": [
+        1.15,
+        1.15,
+        1.15
+      ]
+    },
+    "floor-left-candelabra": {
+      "position": [
+        -1.275,
+        2.65,
+        -4.05
+      ],
+      "rotation": [
+        0,
+        0.08,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    "demonic-display-rack": {
+      "position": [
+        -2.55,
+        0,
+        0.1
+      ],
+      "rotation": [
+        0,
+        1.308997,
+        0
+      ],
+      "scale": [
+        1.25,
+        1.25,
+        1.25
+      ]
+    },
+    "cthulhu-wall-mask": {
+      "position": [
+        1.15,
+        2.725,
+        -4.575
+      ],
+      "rotation": [
+        0.104627,
+        -0.612809,
+        0.174533
+      ],
+      "scale": [
+        1.45,
+        1.45,
+        1.45
+      ]
+    },
+    "maw-cabinet": {
+      "position": [
+        0.625,
+        0,
+        -3
+      ],
+      "rotation": [
+        0,
+        -1.570796,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    "tentacle-lamp": {
+      "position": [
+        0.7,
+        0,
+        0.325
+      ],
+      "rotation": [
+        0,
+        -0.38,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    "mechanical-cthulhu-octopus": {
+      "position": [
+        -0.025,
+        4.925,
+        -4.275
+      ],
+      "rotation": [
+        0.787319,
+        -0.132453,
+        0.095181
+      ],
+      "scale": [
+        1.85,
+        1.85,
+        1.85
+      ]
+    },
+    "mysterious-plaque": {
+      "position": [
+        -0.65,
+        3.35,
+        2.475
+      ],
+      "rotation": [
+        0,
+        -0.174533,
+        0.174533
+      ],
+      "scale": [
+        2,
+        2,
+        2
+      ]
+    },
+    "vintage-television": {
+      "position": [
+        2.35,
+        0.02,
+        0.85
+      ],
+      "rotation": [
+        0,
+        -1.0471975511965976,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    "abyss-grimoire": {
+      "position": [
+        0.72,
+        1.8,
+        -0.7
+      ],
+      "rotation": [
+        0,
+        -0.18,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    "ritual-rug": {
+      "position": [
+        -0.375,
+        0.018,
+        0.65
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.7,
+        0.7,
+        0.7
+      ]
+    },
+    "inscription:video-beyond-screen": {
+      "position": [
+        -2.5,
+        5,
+        -2.68
+      ],
+      "rotation": [
+        -0.08,
+        0.44,
+        -0.09
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    "inscription:computer-idea": {
+      "position": [
+        -0.19,
+        1.16,
+        -1.13
+      ],
+      "rotation": [
+        -0.03,
+        2.03,
+        -0.035
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    "inscription:perfect-tyranny": {
+      "position": [
+        -2.6,
+        2.62,
+        -2.66
+      ],
+      "rotation": [
+        -0.06,
+        0.44,
+        -0.045
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  "copy": {
+    "brandTitle": "Alexi的奇怪脑洞",
+    "brandSubtitle": "LUX3D 深渊资产陈列",
+    "objectiveLabel": "当前任务",
+    "objectivePendingTitle": "找到ALEX消失的秘密",
+    "objectivePendingDescription": "点击家具附近发光的遗物线索；镜头推进后即可查看并归档",
+    "objectiveCompleteTitle": "读取最后的真相",
+    "objectiveCompleteDescription": "显示器已经高亮，点击真相终端以读取最后的真相",
+    "sanityLabel": "SAN值",
+    "rotateHint": "拖动 旋转",
+    "zoomHint": "滚轮 缩放",
+    "exploreHint": "点击发光线索 探索",
+    "resetCameraLabel": "镜头归中",
+    "backToStudioLabel": "返回书房",
+    "undiscoveredRelicLabel": "未归档",
+    "terminalCalloutLabel": "真相终端",
+    "dreamArchiveCalloutLabel": "灵感书架",
+    "videoBeyondScreenText": "视频中50%的内容是隐藏在屏幕之外的",
+    "computerIdeaText": "永远不要扔掉你喜欢的东西",
+    "perfectTyrannyText": "完美，就是一个返自然，用来折磨我们的暴政",
+    "assetLabels": {
+      "abyssal-desk": "深渊书桌",
+      "vertebral-chair": "脊骨座椅",
+      "watching-monitor": "凝视显示器",
+      "reliquary-computer": "圣骸主机",
+      "eldritch-keyboard": "深渊键鼠控制台",
+      "forbidden-bookcase": "禁书架",
+      "floor-left-candelabra": "五臂熔蜡烛台",
+      "demonic-display-rack": "恶魔圣物陈列架",
+      "cthulhu-wall-mask": "猩红凝视面具",
+      "maw-cabinet": "巨口边柜",
+      "tentacle-lamp": "触须立灯",
+      "mechanical-cthulhu-octopus": "机械深渊章鱼",
+      "mysterious-plaque": "神秘牌匾",
+      "vintage-television": "老式电视",
+      "abyss-grimoire": "深渊三页古书",
+      "ritual-rug": "仪式地毯"
+    }
+  },
+  "textLayout": {
+    "brandTitle": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "brandSubtitle": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "objectiveLabel": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "objectivePendingTitle": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "objectivePendingDescription": {
+      "x": 0.00101,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "objectiveCompleteTitle": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "objectiveCompleteDescription": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "sanityLabel": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "rotateHint": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "zoomHint": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "exploreHint": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "resetCameraLabel": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "backToStudioLabel": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "undiscoveredRelicLabel": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "terminalCalloutLabel": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "dreamArchiveCalloutLabel": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "asset-label:abyssal-desk": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "asset-label:vertebral-chair": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "asset-label:watching-monitor": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "asset-label:reliquary-computer": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "asset-label:eldritch-keyboard": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "asset-label:forbidden-bookcase": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "asset-label:floor-left-candelabra": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "asset-label:demonic-display-rack": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "asset-label:cthulhu-wall-mask": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "asset-label:maw-cabinet": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "asset-label:tentacle-lamp": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "asset-label:mechanical-cthulhu-octopus": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "asset-label:mysterious-plaque": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "asset-label:vintage-television": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "asset-label:abyss-grimoire": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    },
+    "asset-label:ritual-rug": {
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "scale": 1
+    }
+  },
+  "lighting": {
+    "globalIntensity": 1.77,
+    "ambientIntensity": 0.97,
+    "exposure": 1.06
+  }
+}

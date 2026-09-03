@@ -151,3 +151,26 @@ npm run preview
 - 右键拖动：平移
 - 滚轮：缩放
 - `R` 或右上角按钮：重置镜头
+
+## 发布场景与 GitHub Pages
+
+- 编辑器的“保存”保存到当前浏览器、当前网址的本地存档，不会上传至 GitHub。
+- 要更新所有访客看到的场景，在编辑器点击“导出发布场景”，将 JSON 保存为 `src/data/publishedScene.json`，再构建发布。
+- 发布快照只包含物体位置、文字内容、文字变换和灯光，不包含游戏进度。当前浏览器已有的编辑存档仍优先，不会被部署清除。
+- 保留源码里的原始 `DEFAULT_STUDIO_LAYOUT`：它是遗物附着点的坐标基准，不可直接替换为发布布局。
+
+```powershell
+npm test
+npm run build -- --mode github-pages
+npm run preview -- --mode github-pages
+```
+
+提交并推送 `main` 后，现有 GitHub Actions 自动构建和发布至 GitHub Pages。
+
+## 资源加载优化
+
+- GLB 几何与动画不变，贴图保留原分辨率：颜色贴图高质量 WebP，法线/金属度/粗糙度等数据贴图无损 WebP。
+- 2026-09-03 首屏 26 个模型合计由 61.98 MiB 降至 43.58 MiB，全部 34 个模型由 94.07 MiB 降至 61.90 MiB。
+- 模型请求最多并发 4 个，主体与主要家具优先；详情、结局及编辑器代码按需加载。
+- 模型更新时同步递增 `src/main.tsx` 的 `assetRevision`，避免继续使用旧版同名模型缓存。
+- `scripts/optimize-delivery-textures.mjs` 可复现贴图优化与几何保留校验；必须传入仓库外的 `--report-dir`，默认只产出候选，显式 `--apply` 才替换资产。
