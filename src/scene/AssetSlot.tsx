@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from 'react'
 import { useGLTF } from '@react-three/drei'
-import { Box3, Mesh, Vector3 } from 'three'
+import { Box3, Mesh, Vector3, type Object3D } from 'three'
 import type { StudioAsset } from '../data/studioAssets'
 import { PlaceholderAsset } from './PlaceholderAsset'
 import { VintageTelevisionStatic } from './VintageTelevisionStatic'
@@ -14,6 +14,7 @@ import { VintageTelevisionStatic } from './VintageTelevisionStatic'
 type AssetSlotProps = {
   asset: StudioAsset
   active?: boolean
+  configureObject?: (object: Object3D) => void
 }
 
 type BoundaryProps = {
@@ -49,7 +50,7 @@ class AssetErrorBoundary extends Component<BoundaryProps, BoundaryState> {
   }
 }
 
-function LoadedGlb({ asset }: AssetSlotProps) {
+function LoadedGlb({ asset, configureObject }: AssetSlotProps) {
   const gltf = useGLTF(asset.src!)
 
   const prepared = useMemo(() => {
@@ -61,6 +62,7 @@ function LoadedGlb({ asset }: AssetSlotProps) {
         child.receiveShadow = asset.receiveShadow
       }
     })
+    configureObject?.(object)
 
     object.updateMatrixWorld(true)
     const bounds = new Box3().setFromObject(object)
@@ -74,7 +76,7 @@ function LoadedGlb({ asset }: AssetSlotProps) {
       uniformScale,
       offset: [-center.x, -bounds.min.y, -center.z] as [number, number, number],
     }
-  }, [asset, gltf.scene])
+  }, [asset, configureObject, gltf.scene])
 
   return (
     <group scale={prepared.uniformScale}>
@@ -87,7 +89,11 @@ function LoadedGlb({ asset }: AssetSlotProps) {
   )
 }
 
-export function AssetSlot({ asset, active = true }: AssetSlotProps) {
+export function AssetSlot({
+  asset,
+  active = true,
+  configureObject,
+}: AssetSlotProps) {
   return (
     <group
       position={asset.position}
@@ -97,7 +103,7 @@ export function AssetSlot({ asset, active = true }: AssetSlotProps) {
       {asset.src ? (
         <AssetErrorBoundary asset={asset}>
           <Suspense fallback={<PlaceholderAsset asset={asset} loading />}>
-            <LoadedGlb asset={asset} />
+            <LoadedGlb asset={asset} configureObject={configureObject} />
           </Suspense>
         </AssetErrorBoundary>
       ) : (

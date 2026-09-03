@@ -1,11 +1,8 @@
 export const LAMP_GLOW_DURATION_SECONDS = 0.96
-export const LAMP_GHOST_COUNT = 6
-export const LAMP_GHOST_SEGMENTS = 1
-export const LAMP_GHOST_ORBIT_RADIANS_PER_SECOND = 0.72
-export const LAMP_GHOST_FADE_ORBIT_MULTIPLIER = 1.65
-export const LAMP_GLOBE_CENTER = [0, 1.9, 0.015] as const
-export const LAMP_GLOBE_RADIUS = 0.255
-export const LAMP_GLOBE_INTERACTION_RADIUS = 0.34
+export const LAMP_GLOBE_MATERIAL_NAME = 'Lamp_Glass_Globe'
+export const LAMP_GLOBE_CENTER = [0.00319, 1.96228, -0.00477] as const
+export const LAMP_GLOBE_RADIUS = 0.2081
+export const LAMP_GLOBE_INTERACTION_RADIUS = 0.255
 export const LAMP_RELIC_APERTURE_RADIUS = 0.12
 // drowned-dream-core expressed in the lamp's default local coordinates.
 export const LAMP_RELIC_APERTURE_CENTER = [0.0126, 1.782, 0.04235] as const
@@ -14,7 +11,6 @@ export type LampGlowSnapshot = Readonly<{
   level: number
   targetOn: boolean
   transitioning: boolean
-  orbitAngle: number
 }>
 
 function clampUnit(value: number) {
@@ -48,14 +44,12 @@ export class LampGlowController {
   private level = 0
   private targetOn = false
   private transitioning = false
-  private orbitAngle = 0
 
   get snapshot(): LampGlowSnapshot {
     return {
       level: this.level,
       targetOn: this.targetOn,
       transitioning: this.transitioning,
-      orbitAngle: this.orbitAngle,
     }
   }
 
@@ -76,24 +70,12 @@ export class LampGlowController {
       return this.snapshot
     }
 
-    const levelBefore = this.level
     if (this.transitioning && deltaSeconds > 0) {
       const direction = this.targetOn ? 1 : -1
       this.level = clampUnit(
         this.level + direction * deltaSeconds / LAMP_GLOW_DURATION_SECONDS,
       )
       if (this.level === Number(this.targetOn)) this.transitioning = false
-    }
-
-    // Keep circling while fully lit. During a fade-out only integrate the
-    // portion of this frame in which a ghost was still visible.
-    const visibleSeconds = this.targetOn
-      ? deltaSeconds
-      : Math.min(deltaSeconds, levelBefore * LAMP_GLOW_DURATION_SECONDS)
-    if (visibleSeconds > 0 && (this.targetOn || levelBefore > 0)) {
-      this.orbitAngle += visibleSeconds
-        * LAMP_GHOST_ORBIT_RADIANS_PER_SECOND
-        * (this.targetOn ? 1 : LAMP_GHOST_FADE_ORBIT_MULTIPLIER)
     }
 
     return this.snapshot

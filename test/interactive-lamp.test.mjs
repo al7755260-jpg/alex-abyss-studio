@@ -3,12 +3,9 @@ import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 
 import {
-  LAMP_GHOST_COUNT,
-  LAMP_GHOST_FADE_ORBIT_MULTIPLIER,
-  LAMP_GHOST_ORBIT_RADIANS_PER_SECOND,
-  LAMP_GHOST_SEGMENTS,
   LAMP_GLOBE_CENTER,
   LAMP_GLOBE_INTERACTION_RADIUS,
+  LAMP_GLOBE_MATERIAL_NAME,
   LAMP_GLOBE_RADIUS,
   LAMP_GLOW_DURATION_SECONDS,
   LAMP_RELIC_APERTURE_CENTER,
@@ -22,6 +19,28 @@ const source = (relativePath) => readFile(
   new URL(relativePath, import.meta.url),
   'utf8',
 )
+
+const readGlbJson = async (relativePath) => {
+  const bytes = await readFile(new URL(relativePath, import.meta.url))
+  assert.equal(bytes.toString('ascii', 0, 4), 'glTF')
+  assert.equal(bytes.readUInt32LE(4), 2)
+  assert.equal(bytes.readUInt32LE(8), bytes.length)
+
+  let offset = 12
+  while (offset + 8 <= bytes.length) {
+    const chunkLength = bytes.readUInt32LE(offset)
+    const chunkType = bytes.readUInt32LE(offset + 4)
+    const chunkStart = offset + 8
+    const chunkEnd = chunkStart + chunkLength
+    assert.ok(chunkEnd <= bytes.length, 'GLB chunk must stay inside the file')
+    if (chunkType === 0x4e4f534a) {
+      return JSON.parse(bytes.toString('utf8', chunkStart, chunkEnd).trimEnd())
+    }
+    offset = chunkEnd
+  }
+
+  assert.fail('lamp GLB is missing its JSON chunk')
+}
 
 const assertClose = (actual, expected, epsilon = 1e-9) => {
   assert.ok(
@@ -101,7 +120,6 @@ test('触须立灯第一次点击渐亮、第二次点击渐灭', () => {
     level: 0,
     targetOn: false,
     transitioning: false,
-    orbitAngle: 0,
   })
 
   controller.toggle()
@@ -113,7 +131,6 @@ test('触须立灯第一次点击渐亮、第二次点击渐灭', () => {
   assert.equal(fadingIn.targetOn, true)
   assert.equal(fadingIn.transitioning, true)
   assertClose(fadingIn.level, 0.5)
-  assert.ok(fadingIn.orbitAngle > 0)
 
   const lit = settle(controller)
   assert.equal(lit.targetOn, true)
@@ -129,51 +146,34 @@ test('触须立灯第一次点击渐亮、第二次点击渐灭', () => {
   assert.equal(fadingOut.targetOn, false)
   assert.equal(fadingOut.transitioning, true)
   assertClose(fadingOut.level, 0.5)
-  assert.ok(fadingOut.orbitAngle > lit.orbitAngle)
 
   const dark = settle(controller)
   assert.equal(dark.targetOn, false)
   assert.equal(dark.transitioning, false)
   assert.equal(dark.level, 0)
-
-  const stoppedAngle = dark.orbitAngle
-  assertClose(controller.advance(3).orbitAngle, stoppedAngle)
 })
 
-test('过渡中的再次点击从当前亮度平滑反向且幽灵在关灯淡出时继续绕行', () => {
+test('过渡中的再次点击从当前亮度平滑反向', () => {
   const controller = new LampGlowController()
   controller.toggle()
   const opening = controller.advance(LAMP_GLOW_DURATION_SECONDS * 0.68)
 
   const openingLevel = opening.level
-  const openingAngle = opening.orbitAngle
   controller.toggle()
   assert.equal(controller.snapshot.targetOn, false)
   assertClose(controller.snapshot.level, openingLevel)
-  assertClose(controller.snapshot.orbitAngle, openingAngle)
 
   const closing = controller.advance(LAMP_GLOW_DURATION_SECONDS * 0.2)
   assert.ok(closing.level < openingLevel)
   assert.ok(closing.level > 0)
-  assert.ok(closing.orbitAngle > openingAngle)
-  assertClose(
-    closing.orbitAngle - openingAngle,
-    LAMP_GLOW_DURATION_SECONDS
-      * 0.2
-      * LAMP_GHOST_ORBIT_RADIANS_PER_SECOND
-      * LAMP_GHOST_FADE_ORBIT_MULTIPLIER,
-  )
 
   const reversedLevel = closing.level
-  const reversedAngle = closing.orbitAngle
   controller.toggle()
   assert.equal(controller.snapshot.targetOn, true)
   assertClose(controller.snapshot.level, reversedLevel)
-  assertClose(controller.snapshot.orbitAngle, reversedAngle)
 
   const reopening = controller.advance(LAMP_GLOW_DURATION_SECONDS * 0.12)
   assert.ok(reopening.level > reversedLevel)
-  assert.ok(reopening.orbitAngle > reversedAngle)
 })
 
 test('灯光过渡与帧率无关，并拒绝非法 delta', () => {
@@ -188,7 +188,6 @@ test('灯光过渡与帧率无关，并拒绝非法 delta', () => {
     manySteps.advance(LAMP_GLOW_DURATION_SECONDS / 100)
   }
   assertClose(singleOpening.level, manySteps.snapshot.level, 1e-10)
-  assertClose(singleOpening.orbitAngle, manySteps.snapshot.orbitAngle, 1e-10)
 
   singleStep.toggle()
   manySteps.toggle()
@@ -198,7 +197,6 @@ test('灯光过渡与帧率无关，并拒绝非法 delta', () => {
     manySteps.advance(LAMP_GLOW_DURATION_SECONDS / 100)
   }
   assertClose(singleClosing.level, manySteps.snapshot.level, 1e-10)
-  assertClose(singleClosing.orbitAngle, manySteps.snapshot.orbitAngle, 1e-10)
 
   const beforeZeroDelta = singleStep.snapshot
   assert.deepEqual(singleStep.advance(0), beforeZeroDelta)
@@ -213,18 +211,55 @@ test('灯光过渡与帧率无关，并拒绝非法 delta', () => {
   assertClose(easeLampGlowLevel(0.5), 0.5)
 })
 
-test('触须立灯幽灵效果保持轻量性能上限', () => {
-  assert.ok(LAMP_GHOST_COUNT >= 3, 'ghost orbit should remain visually legible')
-  assert.ok(LAMP_GHOST_COUNT <= 8, `too many ghosts: ${LAMP_GHOST_COUNT}`)
-  assert.ok(LAMP_GHOST_SEGMENTS >= 1)
-  assert.ok(LAMP_GHOST_SEGMENTS <= 10, `ghost geometry is too dense: ${LAMP_GHOST_SEGMENTS}`)
+test('触须立灯仅保留快速的球体发光过渡', async () => {
+  const lampLogic = await source('../src/scene/lampGlow.ts')
+
   assert.ok(LAMP_GLOW_DURATION_SECONDS > 0)
   assert.ok(LAMP_GLOW_DURATION_SECONDS <= 1.5)
+  assert.doesNotMatch(lampLogic, /LAMP_GHOST|orbitAngle/i)
+})
+
+test('发布版灯具 GLB 内置唯一真实球壳网格与材质', async () => {
+  const gltf = await readGlbJson('../public/models/lamp-optimized.glb')
+  const materials = gltf.materials ?? []
+  const meshes = gltf.meshes ?? []
+
+  assert.equal(materials.length, 2, 'lamp asset should contain body and globe materials only')
+  assert.equal(meshes.length, 2, 'lamp asset should contain body and globe meshes only')
+
+  const globeMaterialIndices = materials
+    .map((material, index) => material.name === LAMP_GLOBE_MATERIAL_NAME ? index : -1)
+    .filter((index) => index >= 0)
+  const globeMeshes = meshes.filter((mesh) => mesh.name === LAMP_GLOBE_MATERIAL_NAME)
+  assert.deepEqual(globeMaterialIndices, [1])
+  assert.equal(globeMeshes.length, 1, 'GLB must not contain a second globe mesh')
+
+  const globePrimitives = globeMeshes[0].primitives ?? []
+  assert.ok(globePrimitives.length > 0, 'real globe mesh must contain geometry')
+  for (const primitive of globePrimitives) {
+    assert.equal(primitive.material, globeMaterialIndices[0])
+    assert.ok(Number.isInteger(primitive.attributes?.POSITION))
+    assert.ok(Number.isInteger(primitive.indices))
+    assert.ok((gltf.accessors?.[primitive.attributes.POSITION]?.count ?? 0) > 0)
+    assert.ok((gltf.accessors?.[primitive.indices]?.count ?? 0) > 0)
+  }
+
+  const nonGlobeNames = [
+    ...(gltf.nodes ?? []),
+    ...meshes,
+    ...materials,
+  ]
+    .map((entry) => entry.name ?? '')
+    .filter((name) => name !== LAMP_GLOBE_MATERIAL_NAME)
+  assert.doesNotMatch(
+    nonGlobeNames.join('\n'),
+    /ghost|halo|spectral|procedural|sphere|core/i,
+  )
 })
 
 test('球面开关给溺梦晶核保留中央独立命中孔', () => {
-  assert.deepEqual(LAMP_GLOBE_CENTER, [0, 1.9, 0.015])
-  assertClose(LAMP_GLOBE_RADIUS, 0.255)
+  assert.deepEqual(LAMP_GLOBE_CENTER, [0.00319, 1.96228, -0.00477])
+  assertClose(LAMP_GLOBE_RADIUS, 0.2081)
   assert.deepEqual(LAMP_RELIC_APERTURE_CENTER, [0.0126, 1.782, 0.04235])
   assert.ok(LAMP_RELIC_APERTURE_RADIUS >= 0.11)
   assert.ok(LAMP_RELIC_APERTURE_RADIUS <= 0.13)
@@ -264,40 +299,55 @@ test('球面开关给溺梦晶核保留中央独立命中孔', () => {
   assertClose(worldAperture[2], 0.244, 0.0001)
 })
 
-test('球光和幽灵透明度由同一渐变值逐帧驱动，幽灵围绕球心旋转', async () => {
-  const [component, assetSlot] = await Promise.all([
+test('灯效直接驱动 GLB 里 Lamp_Glass_Globe 的真实材质', async () => {
+  const [component, assetSlot, lampLogic] = await Promise.all([
     source('../src/scene/InteractiveTentacleLamp.tsx'),
     source('../src/scene/AssetSlot.tsx'),
+    source('../src/scene/lampGlow.ts'),
   ])
 
   assert.match(component, /const playback = controller\.advance\(delta, reducedMotion\)/)
   assert.match(component, /const level = easeLampGlowLevel\(playback\.level\)/)
-  assert.match(component, /coreMaterial\.emissiveIntensity = [^\n]*level/)
-  assert.match(component, /coreMaterial\.opacity = [^\n]*level/)
-  assert.match(component, /haloMaterial\.opacity = level/)
+  assert.equal(LAMP_GLOBE_MATERIAL_NAME, 'Lamp_Glass_Globe')
+  assert.match(
+    lampLogic,
+    /LAMP_GLOBE_MATERIAL_NAME\s*=\s*['"]Lamp_Glass_Globe['"]/,
+  )
+  assert.match(component, /LAMP_GLOBE_MATERIAL_NAME/)
+  assert.match(component, /child instanceof Mesh/)
+  assert.match(component, /material\.name !== LAMP_GLOBE_MATERIAL_NAME/)
+  assert.match(component, /material\.clone\(\)/)
+  assert.match(component, /globeMaterialsRef\.current/)
+  assert.match(component, /const emissiveIntensity = level [^\n]*/)
+  assert.match(component, /globeMaterial\.emissiveIntensity = emissiveIntensity/)
   assert.match(component, /light\.intensity = level [^\n]* globalIntensity/)
+  assert.match(
+    component,
+    /<AssetSlot[\s\S]{0,180}configureObject=\{configureLampObject\}/,
+  )
 
-  assert.match(component, /ghostMaterial\.uniforms\.uOpacity\.value = level/)
-  assert.match(component, /ghostMaterial\.uniforms\.uTime\.value = playback\.orbitAngle/)
-  assert.match(component, /const angle = playback\.orbitAngle \+ phase/)
-  assert.match(component, /Math\.cos\(angle\) \* radius/)
-  assert.match(component, /Math\.sin\(angle\) \* radius/)
+  assert.match(assetSlot, /configureObject\?: \(object: Object3D\) => void/)
+  assert.match(assetSlot, /const object = gltf\.scene\.clone\(true\)/)
   assert.match(
-    component,
-    /name="tentacle-lamp-spectral-effect" position=\{LAMP_GLOBE_CENTER\}/,
+    assetSlot,
+    /configureObject\?\.\(object\)/,
   )
-  assert.match(component, /sphereGeometry args=\{\[LAMP_GLOBE_RADIUS,/)
-  assert.match(
-    component,
-    /<meshStandardMaterial[\s\S]{0,220}emissiveIntensity=\{0\}[\s\S]{0,160}opacity=\{0\}/,
-  )
+
+  assert.doesNotMatch(component, /ghost/i)
+  assert.doesNotMatch(component, /halo/i)
+  assert.doesNotMatch(component, /coreRef|coreMaterialRef/)
+  assert.doesNotMatch(component, /<instancedMesh\b/)
+  assert.doesNotMatch(component, /<shaderMaterial\b/)
+  assert.doesNotMatch(component, /<meshStandardMaterial\b/)
+  assert.doesNotMatch(component, /vertexShader|fragmentShader/)
+  assert.doesNotMatch(component, /LAMP_GLOBE_RADIUS\s*\*\s*1\.22/)
 
   // The old always-on shell and its second light must not remain underneath
   // the interactive, fully faded effect.
   assert.doesNotMatch(assetSlot, /LampCrystalGlow|asset\.id === 'tentacle-lamp'/)
 })
 
-test('灯效 useFrame 只推进控制器并直接更新 Three refs，不触发 React 状态刷新', async () => {
+test('灯效 useFrame 只推进控制器并直接更新真实球壳材质，不触发 React 状态刷新', async () => {
   const component = await source('../src/scene/InteractiveTentacleLamp.tsx')
   const frameBody = extractArrowBlock(component, 'useFrame')
   const reactStateSetters = [
@@ -307,10 +357,10 @@ test('灯效 useFrame 只推进控制器并直接更新 Three refs，不触发 R
   ].map((match) => match[1])
 
   assert.match(frameBody, /controller\.advance\(delta, reducedMotion\)/)
-  assert.match(frameBody, /\.opacity\s*=/)
+  assert.match(frameBody, /globeMaterialsRef\.current/)
+  assert.match(frameBody, /\.emissiveIntensity\s*=/)
   assert.match(frameBody, /\.intensity\s*=/)
-  assert.match(frameBody, /ghosts\.setMatrixAt\(/)
-  assert.match(frameBody, /ghosts\.instanceMatrix\.needsUpdate = true/)
+  assert.doesNotMatch(frameBody, /ghost|setMatrixAt|instanceMatrix/i)
   for (const setter of reactStateSetters) {
     assert.doesNotMatch(
       frameBody,
@@ -378,20 +428,30 @@ test('灯球使用带晶核孔洞的专属代理，编辑模式恢复通用布�
   assert.doesNotMatch(suppressionDeclaration[1], /drowned-dream-core/)
 })
 
-test('六个幽灵共享单一实例绘制和材质，动态点光不投射阴影', async () => {
+test('真实灯球发光只附加一个无阴影点光，不重建任何可见球体', async () => {
   const component = await source('../src/scene/InteractiveTentacleLamp.tsx')
 
-  assert.equal((component.match(/<instancedMesh\b/g) ?? []).length, 1)
+  assert.equal((component.match(/<instancedMesh\b/g) ?? []).length, 0)
+  assert.equal((component.match(/<shaderMaterial\b/g) ?? []).length, 0)
+  assert.equal((component.match(/<planeGeometry\b/g) ?? []).length, 0)
+  assert.equal(
+    (component.match(/<sphereGeometry\b/g) ?? []).length,
+    1,
+    'only the invisible click proxy may retain sphereGeometry',
+  )
+  const proxyStart = component.indexOf('name={`lamp-globe-interaction-proxy:${asset.id}`}')
+  assert.ok(proxyStart >= 0, 'missing the invisible lamp click proxy')
+  const proxySource = component.slice(proxyStart)
   assert.match(
-    component,
-    /args=\{\[undefined, undefined, LAMP_GHOST_COUNT\]\}/,
+    proxySource,
+    /<sphereGeometry args=\{\[LAMP_GLOBE_INTERACTION_RADIUS,/,
   )
   assert.match(
-    component,
-    /<planeGeometry args=\{\[0\.34, 0\.52, LAMP_GHOST_SEGMENTS, LAMP_GHOST_SEGMENTS\]\}/,
+    proxySource,
+    /<meshBasicMaterial[\s\S]{0,180}visible=\{false\}/,
   )
-  assert.equal((component.match(/<shaderMaterial\b/g) ?? []).length, 1)
+  assert.equal((component.match(/<meshStandardMaterial\b/g) ?? []).length, 0)
   assert.equal((component.match(/<pointLight\b/g) ?? []).length, 1)
   assert.match(component, /<pointLight[\s\S]{0,220}castShadow=\{false\}/)
-  assert.doesNotMatch(component, /Array\.from\([^\n]*LAMP_GHOST_COUNT[\s\S]{0,300}<mesh/)
+  assert.doesNotMatch(component, /DynamicDrawUsage|InstancedMesh|ShaderMaterial/)
 })
