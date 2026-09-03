@@ -1,6 +1,14 @@
 import { useFrame } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
-import { Suspense, useEffect, useMemo, useRef } from 'react'
+import {
+  Component,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  type ErrorInfo,
+  type ReactNode,
+} from 'react'
 import {
   AdditiveBlending,
   Box3,
@@ -502,6 +510,41 @@ const STATIC_CANDLE_MODEL_URLS: [string, string, string] = [
   CANDLE_MODEL_URLS.cluster,
 ]
 
+type CandleModelsBoundaryProps = {
+  children: ReactNode
+}
+
+type CandleModelsBoundaryState = {
+  failed: boolean
+}
+
+class CandleModelsErrorBoundary extends Component<
+  CandleModelsBoundaryProps,
+  CandleModelsBoundaryState
+> {
+  state: CandleModelsBoundaryState = { failed: false }
+  private hasWarned = false
+
+  static getDerivedStateFromError(): CandleModelsBoundaryState {
+    return { failed: true }
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    if (this.hasWarned) return
+    this.hasWarned = true
+
+    console.warn(
+      '[深渊工作室] 无法加载蜡烛模型，已跳过模型并保留程序化火焰。',
+      error,
+      info.componentStack,
+    )
+  }
+
+  render() {
+    return this.state.failed ? null : this.props.children
+  }
+}
+
 function CandleModels() {
   const [pillar, skull, cluster] = useGLTF(STATIC_CANDLE_MODEL_URLS)
 
@@ -530,9 +573,11 @@ function CandleModels() {
 export function CandleSet({ active = true }: { active?: boolean }) {
   return (
     <group name="lux3d-candle-set">
-      <Suspense fallback={null}>
-        <CandleModels />
-      </Suspense>
+      <CandleModelsErrorBoundary>
+        <Suspense fallback={null}>
+          <CandleModels />
+        </Suspense>
+      </CandleModelsErrorBoundary>
       <CandleFlames active={active} />
     </group>
   )

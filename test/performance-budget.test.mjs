@@ -132,7 +132,17 @@ test('运行时使用自适应 DPR、单阴影灯和轻量鼠标代理', async (
   assert.match(detail, /if \(!entrance \|\| entranceCompleteRef\.current\) return/)
 
   assert.match(candles, /useGLTF\(STATIC_CANDLE_MODEL_URLS\)/)
-  assert.match(candles, /<Suspense fallback=\{null\}>\s*<CandleModels \/>/)
+  assert.match(candles, /class CandleModelsErrorBoundary extends Component/)
+  assert.match(candles, /static getDerivedStateFromError\(\): CandleModelsBoundaryState/)
+  assert.match(candles, /if \(this\.hasWarned\) return/)
+  assert.match(
+    candles,
+    /console\.warn\(\s*'\[深渊工作室\] 无法加载蜡烛模型，已跳过模型并保留程序化火焰。'/,
+  )
+  assert.match(
+    candles,
+    /<CandleModelsErrorBoundary>\s*<Suspense fallback=\{null\}>\s*<CandleModels \/>\s*<\/Suspense>\s*<\/CandleModelsErrorBoundary>\s*<CandleFlames active=\{active\} \/>/,
+  )
   assert.equal((candles.match(/<instancedMesh/g) ?? []).length, 2)
   assert.doesNotMatch(candles, /cloneMaterial/)
 
