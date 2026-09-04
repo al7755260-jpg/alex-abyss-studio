@@ -315,17 +315,16 @@ test('pending期间任一分区出现新改动时不退出，项目引用只指�
   }
 })
 
-test('公开模式仅保存浏览器草稿，绝不导入客户端或POST本地端点', async () => {
-  for (const browserClean of [false, true]) {
-    const h = harness({ isDevelopment: false, browserClean })
-    await h.invoke()
-    assert.equal(h.importCount, 0)
-    assert.equal(h.posts.length, 0)
-    assert.equal(h.browserWrites.length, browserClean ? 0 : 4)
-    assert.equal(h.state.editing, false)
-    assert.equal(h.state.localState, 'idle')
-    assert.deepEqual(h.refs.latestProjectSceneRef.current, h.project)
-  }
+test('公开模式的编辑入口完全无操作，不读写草稿也不POST本地端点', async () => {
+  const h = harness({ isDevelopment: false, browserClean: false, editing: false })
+  await h.invoke()
+  assert.equal(h.importCount, 0)
+  assert.equal(h.posts.length, 0)
+  assert.equal(h.browserWrites.length, 0)
+  assert.equal(h.state.editing, false)
+  assert.equal(h.state.cancelCount, 0)
+  assert.equal(h.state.localState, 'idle')
+  assert.deepEqual(h.refs.latestProjectSceneRef.current, h.project)
 })
 
 test('打开编辑器不进行磁盘写入，项目载入入口使用最近ACK的新稿', async () => {

@@ -122,7 +122,7 @@ test('光照页签统一调节场景灯、环境光与曝光并独立自动保�
   assert.match(control, /STUDIO_LIGHTING_LIMITS\[field\]/)
   assert.match(control, /onLightingFieldChange\(field, Number\(event\.currentTarget\.value\)\)/)
 
-  assert.match(app, /loadStudioLighting\([\s\S]{0,140}window\.localStorage/)
+  assert.match(app, /loadStudioLighting\(\s*editorStorage,/)
   assert.match(app, /saveStudioLighting\(window\.localStorage, lighting\)/)
   assert.match(app, /const LIGHTING_AUTO_SAVE_DELAY_MS = 220/)
   assert.match(app, /if \(!lightingDirty\) return[\s\S]{0,520}persistLightingSnapshot\(studioLighting\)/)
@@ -194,7 +194,7 @@ test('文字页签可编辑内容并独立选择、变换和保存每个文字�
   assert.match(control, /onUndoText/)
   assert.match(control, /恢复文字位置/)
 
-  assert.match(app, /loadStudioCopy\([\s\S]{0,120}window\.localStorage/)
+  assert.match(app, /loadStudioCopy\(\s*editorStorage,/)
   assert.match(app, /saveStudioCopy\(window\.localStorage, copy\)/)
   assert.match(app, /const COPY_AUTO_SAVE_DELAY_MS = 240/)
   assert.match(app, /if \(!copyDirty\) return[\s\S]{0,460}persistCopySnapshot\(studioCopy\)/)
@@ -210,7 +210,7 @@ test('文字页签可编辑内容并独立选择、变换和保存每个文字�
   assert.match(app, /STUDIO_ASSETS\.map\(\(asset\) => `asset-label:\$\{asset\.id\}`\)/)
   assert.match(app, /createDefaultStudioTextLayout\(STUDIO_TEXT_LAYER_IDS\)/)
   assert.match(app, /useReducer\([\s\S]{0,80}studioTextEditorReducer/)
-  assert.match(app, /loadStudioTextLayout\([\s\S]{0,140}window\.localStorage/)
+  assert.match(app, /loadStudioTextLayout\(\s*editorStorage,/)
   assert.match(app, /saveStudioTextLayout\(window\.localStorage, layout\)/)
   assert.match(app, /const TEXT_LAYOUT_AUTO_SAVE_DELAY_MS = 180/)
   assert.match(app, /if \(!textLayoutDirty\) return[\s\S]{0,480}persistTextLayoutSnapshot\(textEditorState\.draft\)/)

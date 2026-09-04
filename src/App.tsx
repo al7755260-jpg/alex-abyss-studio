@@ -86,7 +86,8 @@ const STUDIO_TEXT_LAYER_IDS = [
   ...STUDIO_ASSETS.map((asset) => `asset-label:${asset.id}`),
 ]
 const DEFAULT_STUDIO_TEXT_LAYOUT = createDefaultStudioTextLayout(STUDIO_TEXT_LAYER_IDS)
-// The published composition is bundled with the site; local drafts still win.
+// The published composition is bundled with the site; only the local DEV editor
+// may override it with browser recovery drafts.
 // Keep DEFAULT_STUDIO_LAYOUT as the original attachment coordinate reference.
 const PUBLISHED_STUDIO_SCENE = resolveSceneSnapshot(publishedScene, {
   layout: DEFAULT_STUDIO_LAYOUT,
@@ -110,12 +111,16 @@ const LIGHTING_AUTO_SAVE_DELAY_MS = 220
 const DreamArchive = lazy(() => import('./ui/ideas/DreamArchive'))
 const GrimoireMemoryAlbum = lazy(() => import('./ui/grimoire/GrimoireMemoryAlbum'))
 const TelevisionTransmission = lazy(() => import('./ui/television/TelevisionTransmission'))
-const StudioEditorControl = lazy(() => import('./ui/editor/StudioEditorControl').then(
-  (module) => ({ default: module.StudioEditorControl }),
-))
-const StudioSceneExport = lazy(() => import('./ui/editor/StudioSceneExport').then(
-  (module) => ({ default: module.StudioSceneExport }),
-))
+const StudioEditorControl = import.meta.env.DEV
+  ? lazy(() => import('./ui/editor/StudioEditorControl').then(
+      (module) => ({ default: module.StudioEditorControl }),
+    ))
+  : null
+const StudioSceneExport = import.meta.env.DEV
+  ? lazy(() => import('./ui/editor/StudioSceneExport').then(
+      (module) => ({ default: module.StudioSceneExport }),
+    ))
+  : null
 
 const STUDIO_TEXT_LAYER_LABELS: Record<StudioCopyField, string> = {
   brandTitle: '主标题',
@@ -146,7 +151,11 @@ export default function App() {
   const [dreamArchiveOpen, setDreamArchiveOpen] = useState(false)
   const [grimoireMemoryOpen, setGrimoireMemoryOpen] = useState(false)
   const [televisionTransmissionOpen, setTelevisionTransmissionOpen] = useState(false)
-  const [editingLayout, setEditingLayout] = useState(false)
+  const [editingLayoutRequested, setEditingLayout] = useState(false)
+  const editingLayout = import.meta.env.DEV && editingLayoutRequested
+  const editorStorage = import.meta.env.DEV && typeof window !== 'undefined'
+    ? window.localStorage
+    : null
   const [editorSection, setEditorSection] = useState<StudioEditorSection>('layout')
   const [layoutSaveState, setLayoutSaveState] = useState<'idle' | 'saved' | 'error'>('idle')
   const [copySaveState, setCopySaveState] = useState<'idle' | 'saved' | 'error'>('idle')
@@ -161,11 +170,13 @@ export default function App() {
     PUBLISHED_STUDIO_SCENE.layout,
     (defaults) => createStudioEditorState(
       defaults,
-      loadStudioLayout(
-        typeof window === 'undefined' ? null : window.localStorage,
-        defaults,
-        STUDIO_LAYOUT_PREVIOUS_DEFAULTS,
-      ),
+      import.meta.env.DEV
+        ? loadStudioLayout(
+            editorStorage,
+            defaults,
+            STUDIO_LAYOUT_PREVIOUS_DEFAULTS,
+          )
+        : defaults,
     ),
   )
   const [textEditorState, dispatchTextEditor] = useReducer(
@@ -173,15 +184,15 @@ export default function App() {
     PUBLISHED_STUDIO_SCENE.textLayout,
     (defaults) => createStudioTextEditorState(
       defaults,
-      loadStudioTextLayout(
-        typeof window === 'undefined' ? null : window.localStorage,
-        defaults,
-      ),
+      import.meta.env.DEV
+        ? loadStudioTextLayout(editorStorage, defaults)
+        : defaults,
     ),
   )
-  const [studioCopy, setStudioCopy] = useState<StudioCopy>(() => loadStudioCopy(
-    typeof window === 'undefined' ? null : window.localStorage,
-    PUBLISHED_STUDIO_SCENE.copy,
+  const [studioCopy, setStudioCopy] = useState<StudioCopy>(() => (
+    import.meta.env.DEV
+      ? loadStudioCopy(editorStorage, PUBLISHED_STUDIO_SCENE.copy)
+      : PUBLISHED_STUDIO_SCENE.copy
   ))
   const [savedStudioCopy, setSavedStudioCopy] = useState<StudioCopy>(() => studioCopy)
   const studioSceneCopy = useMemo(() => ({
@@ -200,10 +211,9 @@ export default function App() {
     studioCopy.videoBeyondScreenText,
   ])
   const [studioLighting, setStudioLighting] = useState<StudioLightingSettings>(() => (
-    loadStudioLighting(
-      typeof window === 'undefined' ? null : window.localStorage,
-      PUBLISHED_STUDIO_SCENE.lighting,
-    )
+    import.meta.env.DEV
+      ? loadStudioLighting(editorStorage, PUBLISHED_STUDIO_SCENE.lighting)
+      : cloneStudioLighting(PUBLISHED_STUDIO_SCENE.lighting)
   ))
   const [savedStudioLighting, setSavedStudioLighting] = useState<StudioLightingSettings>(
     () => studioLighting,
@@ -380,6 +390,7 @@ export default function App() {
   }, [beginRelicReveal, editingLayout, finishRelicOpening, mystery.actions, mystery.state.view.kind])
 
   const persistLayoutSnapshot = useCallback((layout: StudioLayout) => {
+    if (!import.meta.env.DEV) return false
     try {
       return saveStudioLayout(window.localStorage, layout)
     } catch {
@@ -388,6 +399,7 @@ export default function App() {
   }, [])
 
   const persistCopySnapshot = useCallback((copy: StudioCopy) => {
+    if (!import.meta.env.DEV) return false
     try {
       return saveStudioCopy(window.localStorage, copy)
     } catch {
@@ -396,6 +408,7 @@ export default function App() {
   }, [])
 
   const persistTextLayoutSnapshot = useCallback((layout: StudioTextLayout) => {
+    if (!import.meta.env.DEV) return false
     try {
       return saveStudioTextLayout(window.localStorage, layout)
     } catch {
@@ -404,6 +417,7 @@ export default function App() {
   }, [])
 
   const persistLightingSnapshot = useCallback((lighting: StudioLightingSettings) => {
+    if (!import.meta.env.DEV) return false
     try {
       return saveStudioLighting(window.localStorage, lighting)
     } catch {
@@ -457,7 +471,7 @@ export default function App() {
 
   const toggleLayoutEditor = useCallback(async () => {
     // The ref closes the double-click gap before React renders the disabled button.
-    if (localFileSavePendingRef.current) return
+    if (!import.meta.env.DEV || localFileSavePendingRef.current) return
     if (editingLayout) {
       if (import.meta.env.DEV) {
         const snapshot: StudioSceneSnapshot = {
@@ -1024,7 +1038,8 @@ export default function App() {
         copy={studioCopy}
         onOpenRelic={requestOpenRelic}
         editingLayout={editingTransforms}
-        editorControl={editingLayout ? (
+        editorControl={import.meta.env.DEV && StudioEditorControl && StudioSceneExport
+          ? editingLayout ? (
           <Suspense fallback={<StudioEditorLauncher onOpen={toggleLayoutEditor} loading />}>
           <StudioEditorControl
             enabled={editingLayout}
@@ -1104,10 +1119,11 @@ export default function App() {
             )}
           />
           </Suspense>
-        ) : <StudioEditorLauncher
-          onOpen={toggleLayoutEditor}
-          savedMessage={localFileSaveState === 'saved' ? localFileSaveMessage : undefined}
-        />}
+          ) : <StudioEditorLauncher
+            onOpen={toggleLayoutEditor}
+            savedMessage={localFileSaveState === 'saved' ? localFileSaveMessage : undefined}
+          />
+          : null}
         onResetCamera={resetCamera}
       />
 

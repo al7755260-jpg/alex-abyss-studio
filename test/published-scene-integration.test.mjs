@@ -24,23 +24,30 @@ test('公开版包含真实编辑快照，而非仅依赖访客浏览器保存',
   assert.deepEqual(resolveSceneSnapshot(snapshot, snapshot), snapshot)
 })
 
-test('启动读取公开摆放、文字和灯光，同时保留原始遗物附着坐标参照', async () => {
+test('公开版只读取发布快照，DEV 才允许浏览器草稿覆盖', async () => {
   const app = await source('src/App.tsx')
   assert.match(app, /import publishedScene from '\.\/data\/publishedScene\.json'/)
   assert.match(app, /const PUBLISHED_STUDIO_SCENE = resolveSceneSnapshot\(publishedScene,/)
+  assert.match(app, /const editorStorage = import\.meta\.env\.DEV && typeof window !== 'undefined'\s*\? window\.localStorage\s*: null/)
   assert.match(app, /studioEditorReducer,\s*PUBLISHED_STUDIO_SCENE\.layout/)
   assert.match(app, /studioTextEditorReducer,\s*PUBLISHED_STUDIO_SCENE\.textLayout/)
-  assert.match(app, /loadStudioCopy\([\s\S]{0,120}PUBLISHED_STUDIO_SCENE\.copy/)
-  assert.match(app, /loadStudioLighting\([\s\S]{0,130}PUBLISHED_STUDIO_SCENE\.lighting/)
+  assert.match(app, /loadStudioLayout\(\s*editorStorage,/)
+  assert.match(app, /loadStudioTextLayout\(\s*editorStorage,/)
+  assert.match(app, /loadStudioCopy\(\s*editorStorage,\s*PUBLISHED_STUDIO_SCENE\.copy/)
+  assert.match(app, /loadStudioLighting\(\s*editorStorage,\s*PUBLISHED_STUDIO_SCENE\.lighting/)
   assert.match(app, /defaultStudioLayout=\{DEFAULT_STUDIO_LAYOUT\}/)
-  assert.match(app, /sceneExport=\{\([\s\S]{0,500}<StudioSceneExport snapshot=/)
 })
 
-test('编辑器与终局界面只在用户触发时下载，不增加首屏代码负担', async () => {
+test('编辑器仅存在于 DEV 构建，公开版无法激活且不挂载入口', async () => {
   const [app, hud] = await Promise.all([source('src/App.tsx'), source('src/ui/game/GameHUD.tsx')])
-  assert.match(app, /const StudioEditorControl = lazy\(/)
-  assert.match(app, /const StudioSceneExport = lazy\(/)
-  assert.match(app, /editorControl=\{editingLayout \? \(/)
+  assert.match(app, /const StudioEditorControl = import\.meta\.env\.DEV\s*\? lazy\(/)
+  assert.match(app, /const StudioSceneExport = import\.meta\.env\.DEV\s*\? lazy\(/)
+  assert.match(app, /const \[editingLayoutRequested, setEditingLayout\] = useState\(false\)/)
+  assert.match(app, /const editingLayout = import\.meta\.env\.DEV && editingLayoutRequested/)
+  assert.match(app, /if \(!import\.meta\.env\.DEV \|\| localFileSavePendingRef\.current\) return/)
+  assert.equal((app.match(/if \(!import\.meta\.env\.DEV\) return false/g) ?? []).length, 4)
+  assert.match(app, /editorControl=\{import\.meta\.env\.DEV && StudioEditorControl && StudioSceneExport/)
+  assert.match(app, /savedMessage=\{localFileSaveState === 'saved'[\s\S]{0,120}: null\}/)
   assert.match(hud, /const ArtifactDetailHUD = lazy\(/)
   assert.match(hud, /const FinaleSequence = lazy\(/)
 })
