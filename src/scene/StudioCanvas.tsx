@@ -881,7 +881,7 @@ function StudioScene({
       ) : (
         <>
           <color attach="background" args={['#030506']} />
-          <fog attach="fog" args={['#080b0d', 12, 30]} />
+          {/* Atmosphere stays in screen-space effects so dolly distance cannot darken the set. */}
         </>
       )}
 

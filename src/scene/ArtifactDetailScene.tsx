@@ -16,6 +16,7 @@ import {
   DETAIL_PARCHMENT_OFFSET as PARCHMENT_OFFSET,
   DETAIL_PARCHMENT_TARGET_WIDTH as PARCHMENT_TARGET_WIDTH,
   DETAIL_RELIC_SIZE,
+  detailLightOffsetScale,
 } from './artifactDetailLayout'
 import { RelicLoadBoundary, RelicModel } from './RelicModel'
 import { useStudioLightingSettings } from './StudioLightingSettingsContext'
@@ -46,15 +47,18 @@ function DetailRenderTuning({ accent }: { accent: string }) {
 
     const right = rightRef.current.set(1, 0, 0).applyQuaternion(camera.quaternion)
     const up = upRef.current.set(0, 1, 0).applyQuaternion(camera.quaternion)
+    const distanceScale = detailLightOffsetScale(
+      camera.position.distanceTo(centerRef.current),
+    )
 
     key.position
       .copy(camera.position)
-      .addScaledVector(right, -1.35)
-      .addScaledVector(up, 0.85)
+      .addScaledVector(right, -1.35 * distanceScale)
+      .addScaledVector(up, 0.85 * distanceScale)
     fill.position
       .copy(camera.position)
-      .addScaledVector(right, 1.5)
-      .addScaledVector(up, -0.2)
+      .addScaledVector(right, 1.5 * distanceScale)
+      .addScaledVector(up, -0.2 * distanceScale)
     key.target.position.copy(centerRef.current)
     fill.target.position.copy(centerRef.current)
     key.target.updateMatrixWorld()
@@ -195,7 +199,7 @@ export function ArtifactDetailScene({ relic }: { relic: HiddenRelic }) {
   return (
     <>
       <color attach="background" args={['#050708']} />
-      <fog attach="fog" args={['#070a0b', 8, 19]} />
+      {/* Keep zoom photometrically neutral; view-depth fog made distant relics turn black. */}
       <DetailRenderTuning accent={relic.accent} />
       <ambientLight
         color="#718783"

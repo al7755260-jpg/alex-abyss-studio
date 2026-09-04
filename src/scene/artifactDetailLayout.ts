@@ -13,6 +13,10 @@ export const DETAIL_PARCHMENT_SAFE_WIDTH_RATIO = 0.64
 export const DETAIL_PARCHMENT_SAFE_HEIGHT_RATIO = 0.76
 export const DETAIL_CENTER = [0.36, 1.12, -1.04] as const
 
+export function detailLightOffsetScale(cameraDistance: number) {
+  return Math.max(cameraDistance, 0.0001) / DETAIL_INITIAL_CAMERA_DISTANCE
+}
+
 export const DETAIL_PARCHMENT_SOURCE_DIMENSIONS: DetailDimensions = {
   x: 0.6,
   y: 0.549974,
