@@ -8,13 +8,31 @@ import './StudioSceneExport.css'
 
 export type StudioSceneExportProps = {
   snapshot: StudioSceneSnapshot
+  onLoadProjectScene?: () => void
+  projectSceneSaveState?: 'pending' | 'saved' | 'error'
 }
 
-export function StudioSceneExport({ snapshot }: StudioSceneExportProps) {
+export function StudioSceneExport({
+  snapshot,
+  onLoadProjectScene,
+  projectSceneSaveState,
+}: StudioSceneExportProps) {
   const panelId = useId()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [exportJson, setExportJson] = useState<string | null>(null)
   const [status, setStatus] = useState('')
+  const [confirmProjectLoad, setConfirmProjectLoad] = useState(false)
+  const [projectLoadRequested, setProjectLoadRequested] = useState(false)
+
+  function confirmLoadProjectScene() {
+    if (!onLoadProjectScene) return
+    onLoadProjectScene()
+    setConfirmProjectLoad(false)
+    setProjectLoadRequested(true)
+    // Any previously exported JSON describes the old draft, not the loaded project.
+    setExportJson(null)
+    setStatus('')
+  }
 
   function generateSnapshot() {
     try {
@@ -68,8 +86,9 @@ export function StudioSceneExport({ snapshot }: StudioSceneExportProps) {
   return (
     <section className="studio-scene-export" aria-label="发布场景导出">
       <p className="studio-scene-export__hint">
-        编辑结果只保存在当前浏览器、当前网址。本地保存不等于全站发布；
-        导出的场景需纳入网站并重新部署，其他访客才能看到相同摆放。
+        {import.meta.env.DEV
+          ? '编辑时自动保留浏览器草稿；点击“保存并退出”会写入本地项目文件。公开网站仍需重新部署，才会同步更新。'
+          : '编辑结果只保存在当前浏览器、当前网址。本地保存不等于全站发布；导出的场景需纳入网站并重新部署，其他访客才能看到相同摆放。'}
       </p>
       <button
         className="studio-scene-export__trigger"
@@ -100,6 +119,39 @@ export function StudioSceneExport({ snapshot }: StudioSceneExportProps) {
             <button type="button" onClick={downloadSnapshot}>下载 JSON</button>
             <button type="button" onClick={generateSnapshot}>重新生成当前场景</button>
           </div>
+        </div>
+      ) : null}
+      {onLoadProjectScene ? (
+        <div className="studio-scene-export__panel">
+          <button
+            className="studio-scene-export__trigger"
+            type="button"
+            aria-expanded={confirmProjectLoad}
+            onClick={() => setConfirmProjectLoad(true)}
+          >
+            载入项目保存的场景
+          </button>
+          {confirmProjectLoad ? (
+            <div className="studio-scene-export__panel" role="group" aria-label="确认载入项目场景">
+              <p className="studio-scene-export__hint">
+                将用本地项目文件替换当前浏览器的物体摆放、文字内容与位置、光照，
+                并自动保存。请先导出当前场景作为备份。游戏进度不变，此操作不会发布网站。
+              </p>
+              <div className="studio-scene-export__actions">
+                <button type="button" onClick={confirmLoadProjectScene}>已备份，确认载入</button>
+                <button type="button" onClick={() => setConfirmProjectLoad(false)}>取消</button>
+              </div>
+            </div>
+          ) : null}
+          {projectLoadRequested ? (
+            <p className="studio-scene-export__status" role="status" aria-live="polite">
+              {projectSceneSaveState === 'error'
+                ? '项目场景已载入，但部分内容保存失败。请在相应编辑分类重试保存，暂勿关闭页面。'
+                : projectSceneSaveState === 'saved'
+                  ? '项目场景已载入并保存到当前浏览器；可继续编辑，尚未发布到网站。'
+                  : '项目场景已载入编辑区，正在自动保存，请稍候。'}
+            </p>
+          ) : null}
         </div>
       ) : null}
       <p className="studio-scene-export__status" role="status" aria-live="polite">{status}</p>

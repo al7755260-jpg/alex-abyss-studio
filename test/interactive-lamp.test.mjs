@@ -257,10 +257,10 @@ test('发布版灯具 GLB 内置唯一真实球壳网格与材质', async () => 
   )
 })
 
-test('球面开关给溺梦晶核保留中央独立命中孔', () => {
+test('球面开关给表面外侧的溺梦晶核保留独立命中孔', () => {
   assert.deepEqual(LAMP_GLOBE_CENTER, [0.00319, 1.96228, -0.00477])
   assertClose(LAMP_GLOBE_RADIUS, 0.2081)
-  assert.deepEqual(LAMP_RELIC_APERTURE_CENTER, [0.0126, 1.782, 0.04235])
+  assert.deepEqual(LAMP_RELIC_APERTURE_CENTER, [0.17, 1.84, 0.175])
   assert.ok(LAMP_RELIC_APERTURE_RADIUS >= 0.11)
   assert.ok(LAMP_RELIC_APERTURE_RADIUS <= 0.13)
   assert.ok(LAMP_RELIC_APERTURE_RADIUS < LAMP_GLOBE_RADIUS)
@@ -285,8 +285,8 @@ test('球面开关给溺梦晶核保留中央独立命中孔', () => {
   )
 
   // The aperture is authored in the lamp's local frame. Under the default
-  // placement it must resolve onto the existing drowned-dream-core hotspot,
-  // not onto the slightly higher geometric globe centre.
+  // placement it must resolve onto the surface-mounted drowned-dream-core
+  // hotspot, not the geometric globe centre or the old point inside the cage.
   const yaw = -0.38
   const [localX, localY, localZ] = LAMP_RELIC_APERTURE_CENTER
   const worldAperture = [
@@ -294,9 +294,9 @@ test('球面开关给溺梦晶核保留中央独立命中孔', () => {
     localY,
     0.2 - localX * Math.sin(yaw) + localZ * Math.cos(yaw),
   ]
-  assertClose(worldAperture[0], 0.246, 0.0001)
-  assertClose(worldAperture[1], 1.782, 0.0001)
-  assertClose(worldAperture[2], 0.244, 0.0001)
+  assertClose(worldAperture[0], 0.342962, 0.0001)
+  assertClose(worldAperture[1], 1.84, 0.0001)
+  assertClose(worldAperture[2], 0.425573, 0.0001)
 })
 
 test('灯效直接驱动 GLB 里 Lamp_Glass_Globe 的真实材质', async () => {
@@ -412,7 +412,7 @@ test('灯球使用带晶核孔洞的专属代理，编辑模式恢复通用布�
   assert.match(relics, /const isDrownedDreamCore = relic\.id === 'drowned-dream-core'/)
   assert.match(
     relics,
-    /isDrownedDreamCore[\s\S]{0,120}\? LAMP_RELIC_APERTURE_RADIUS \/ relic\.hitRadius/,
+    /isDrownedDreamCore[\s\S]{0,120}\? lampRelicWorldRadius \/ relic\.hitRadius/,
   )
   assert.match(relics, /if \(found\.has\(relic\.id\) \|\| suppressed\.has\(relic\.id\)\) return null/)
   assert.match(relics, /event\.stopPropagation\(\)[\s\S]{0,80}onOpenRelic\(relic\.id\)/)

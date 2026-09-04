@@ -7,6 +7,7 @@ import {
 import type { StudioAsset } from '../data/studioAssets'
 import { AssetSlot } from './AssetSlot'
 import { DemonicRackSkulls } from './DemonicRackSkulls'
+import { DISPLAY_RACK_INSTALLATION_SCALE } from './displayRackGeometry'
 
 type DisplayRackInstallationProps = {
   asset: StudioAsset
@@ -131,7 +132,9 @@ function WoodBackPanel() {
   )
 }
 
-export function DisplayRackInstallation({ asset }: DisplayRackInstallationProps) {
+export function DisplayRackInstallation({
+  asset,
+}: DisplayRackInstallationProps) {
   const localAsset = useMemo<StudioAsset>(
     () => ({
       ...asset,
@@ -145,7 +148,7 @@ export function DisplayRackInstallation({ asset }: DisplayRackInstallationProps)
     <group
       position={asset.position}
       rotation={asset.rotation}
-      scale={[0.7, 0.7, 0.7]}
+      scale={DISPLAY_RACK_INSTALLATION_SCALE}
     >
       <AssetSlot asset={localAsset} />
       <WoodBackPanel />

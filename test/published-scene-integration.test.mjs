@@ -8,8 +8,17 @@ const source = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8'
 test('公开版包含真实编辑快照，而非仅依赖访客浏览器保存', async () => {
   const snapshot = JSON.parse(await source('src/data/publishedScene.json'))
   assert.equal(snapshot.schemaVersion, 1)
-  assert.equal(Object.keys(snapshot.layout).length, 19)
+  assert.equal(Object.keys(snapshot.layout).length, 20)
   assert.equal(Object.keys(snapshot.textLayout).length, 32)
+  const bustTransform = snapshot.layout['lovecraft-particle-bust']
+  assert.deepEqual(Object.keys(bustTransform).sort(), ['position', 'rotation', 'scale'])
+  assert.ok([
+    ...bustTransform.position,
+    ...bustTransform.rotation,
+    ...bustTransform.scale,
+  ].every(Number.isFinite))
+  assert.ok(bustTransform.scale.every((value) => value === bustTransform.scale[0]))
+  assert.ok(bustTransform.scale[0] > 0)
   assert.equal(snapshot.copy.objectivePendingTitle, '找到ALEX消失的秘密')
   assert.deepEqual(Object.keys(snapshot).sort(), ['copy', 'layout', 'lighting', 'schemaVersion', 'textLayout'])
   assert.deepEqual(resolveSceneSnapshot(snapshot, snapshot), snapshot)

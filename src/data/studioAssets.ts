@@ -259,6 +259,33 @@ export const STUDIO_ASSETS: readonly StudioAsset[] = [
   },
 ] as const
 
+export const LOVECRAFT_PARTICLE_BUST_ASSET_ID = 'lovecraft-particle-bust'
+
+/**
+ * This asset is edited in the display rack's local space so it keeps following
+ * the rack while retaining an independent position, rotation, and scale.
+ */
+export type StudioEditableAsset = {
+  id: string
+  label: string
+  position: readonly [number, number, number]
+  rotation: readonly [number, number, number]
+  scale?: readonly [number, number, number]
+}
+
+export const LOVECRAFT_PARTICLE_BUST_ASSET: StudioEditableAsset = {
+  id: LOVECRAFT_PARTICLE_BUST_ASSET_ID,
+  label: '洛夫克拉夫特粒子雕塑',
+  position: [0, 2.433, -0.045],
+  rotation: [0, -0.603, 0],
+  scale: [0.62, 0.62, 0.62],
+}
+
+export const STUDIO_EDITABLE_ASSETS: readonly StudioEditableAsset[] = [
+  ...STUDIO_ASSETS,
+  LOVECRAFT_PARTICLE_BUST_ASSET,
+]
+
 export const REAL_ASSET_COUNT = STUDIO_ASSETS.reduce(
   (count, asset) => count + (asset.src ? 1 : 0),
   0,

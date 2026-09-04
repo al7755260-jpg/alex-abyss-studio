@@ -21,6 +21,7 @@ type HiddenRelicsProps = {
   suppressedRelicIds?: readonly HiddenRelicId[]
   fingerprintCasketAccessible: boolean
   hitPositions?: ReadonlyMap<HiddenRelicId, Vector3Tuple>
+  lampRelicWorldRadius?: number
   onOpenRelic: (relicId: HiddenRelicId) => void
   onHoverRelic?: (relicId: HiddenRelicId | null) => void
 }
@@ -118,6 +119,7 @@ export function HiddenRelics({
   suppressedRelicIds = NO_SUPPRESSED_RELIC_IDS,
   fingerprintCasketAccessible,
   hitPositions,
+  lampRelicWorldRadius = LAMP_RELIC_APERTURE_RADIUS,
   onOpenRelic,
   onHoverRelic,
 }: HiddenRelicsProps) {
@@ -139,7 +141,7 @@ export function HiddenRelics({
         const activationRadiusScale = isFingerprintCasket
           ? 0.75
           : isDrownedDreamCore
-            ? LAMP_RELIC_APERTURE_RADIUS / relic.hitRadius
+            ? lampRelicWorldRadius / relic.hitRadius
           : RELIC_ACTIVATION_RADIUS_SCALE
         return (
           <group key={relic.id} position={hitPosition}>
@@ -151,6 +153,8 @@ export function HiddenRelics({
               raycast={pointerEnabled ? relicProxyRaycast : ignoreRaycast}
               userData={{
                 relicHitRadius: relic.hitRadius * activationRadiusScale,
+                relicActivationProxy: pointerEnabled,
+                relicHostAssetId: relic.hostAssetId,
               }}
               onClick={pointerEnabled ? (event) => {
                 event.stopPropagation()

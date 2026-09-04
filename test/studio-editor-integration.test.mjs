@@ -275,7 +275,7 @@ test('三段3D场景文字排除2D图层并复用唯一 G R S 变换链路', asy
   assert.match(inscriptions, /SCENE_INSCRIPTION_COPY_FIELDS[\s\S]{0,140}map\(\(\{ copyField \}\) => copyField\)/)
   assert.match(inscriptions, /SCENE_INSCRIPTION_LAYOUT_ASSETS[\s\S]{0,180}id,\s*position,\s*rotation,\s*scale/)
 
-  assert.match(app, /createDefaultStudioLayout\(\[[\s\S]{0,100}\.\.\.STUDIO_ASSETS,[\s\S]{0,80}\.\.\.SCENE_INSCRIPTION_LAYOUT_ASSETS/)
+  assert.match(app, /createDefaultStudioLayout\(\[[\s\S]{0,100}\.\.\.STUDIO_EDITABLE_ASSETS,[\s\S]{0,80}\.\.\.SCENE_INSCRIPTION_LAYOUT_ASSETS/)
   assert.match(
     app,
     /Object\.keys\(STUDIO_COPY_FIELD_LIMITS\)\.filter\([\s\S]{0,100}!SCENE_INSCRIPTION_COPY_FIELDS\.has\(field\)/,

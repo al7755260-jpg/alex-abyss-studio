@@ -126,7 +126,7 @@ test('遗物鼠标命中半径按类型设定，光点、数据半径和镜头�
   assert.match(hints, /const isDrownedDreamCore = relic\.id === 'drowned-dream-core'/)
   assert.match(
     hints,
-    /const activationRadiusScale = isFingerprintCasket[\s\S]{0,80}\? 0\.75[\s\S]{0,100}: isDrownedDreamCore[\s\S]{0,100}\? LAMP_RELIC_APERTURE_RADIUS \/ relic\.hitRadius[\s\S]{0,80}: RELIC_ACTIVATION_RADIUS_SCALE/,
+    /const activationRadiusScale = isFingerprintCasket[\s\S]{0,80}\? 0\.75[\s\S]{0,100}: isDrownedDreamCore[\s\S]{0,100}\? lampRelicWorldRadius \/ relic\.hitRadius[\s\S]{0,80}: RELIC_ACTIVATION_RADIUS_SCALE/,
   )
   assert.match(
     hints,

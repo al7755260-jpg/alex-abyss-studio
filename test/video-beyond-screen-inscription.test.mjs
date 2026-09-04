@@ -117,6 +117,6 @@ test('第二句在头腔墙体层独立注册为可选的三维布局对象', as
   assert.match(mount, /editing=\{editingLayout\}/)
   assert.match(mount, /selected=\{selectedAssetId === VIDEO_BEYOND_SCREEN_INSCRIPTION_ID\}/)
   assert.match(mount, /onSelect=\{\(\) => onSelectAsset\(VIDEO_BEYOND_SCREEN_INSCRIPTION_ID\)\}/)
-  assert.match(canvas, /<boxGeometry args=\{asset\.placeholderSize\} \/>/)
+  assert.match(canvas, /<boxGeometry args=\{interactionProxySize\} \/>/)
   assert.doesNotMatch(assets, /inscription:video-beyond-screen|screen-inscription|offscreen-inscription/)
 })

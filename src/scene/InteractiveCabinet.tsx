@@ -271,6 +271,7 @@ export function InteractiveCabinet({
             interactionProxy: true,
             studioAssetId: asset.id,
             cabinetToggleProxy: true,
+            relicHostOcclusionProxy: true,
           }}
           onPointerDown={(event) => event.stopPropagation()}
           onClick={handleClick}

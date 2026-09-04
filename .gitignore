@@ -21,3 +21,7 @@ packaging/
 
 # Local QA captures are not needed by the runtime deployment.
 /qa-*.png
+
+# Automatic local-editor saves and their atomic staging files stay on this PC.
+.local-scene-backups/
+/src/data/.publishedScene.local-save-*.tmp

@@ -1,8 +1,8 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { type HiddenRelicId } from './data/hiddenRelics'
-import { STUDIO_ASSETS } from './data/studioAssets'
+import { STUDIO_ASSETS, STUDIO_EDITABLE_ASSETS } from './data/studioAssets'
 import publishedScene from './data/publishedScene.json'
-import { resolveSceneSnapshot } from './editor/studioSceneSnapshot'
+import { resolveSceneSnapshot, type StudioSceneSnapshot } from './editor/studioSceneSnapshot'
 import {
   isSceneInscriptionId,
   SCENE_INSCRIPTION_BY_ID,
@@ -68,7 +68,7 @@ import { StudioTextLayerProvider } from './ui/editor/StudioTextLayer'
 import { LoadingOverlay } from './ui/LoadingOverlay'
 
 const DEFAULT_STUDIO_LAYOUT = createDefaultStudioLayout([
-  ...STUDIO_ASSETS,
+  ...STUDIO_EDITABLE_ASSETS,
   ...SCENE_INSCRIPTION_LAYOUT_ASSETS,
 ])
 const STUDIO_LAYOUT_PREVIOUS_DEFAULTS: StudioLayout = {
@@ -94,7 +94,9 @@ const PUBLISHED_STUDIO_SCENE = resolveSceneSnapshot(publishedScene, {
   textLayout: DEFAULT_STUDIO_TEXT_LAYOUT,
   lighting: DEFAULT_STUDIO_LIGHTING,
 })
-const STUDIO_ASSET_BY_ID = new Map(STUDIO_ASSETS.map((asset) => [asset.id, asset] as const))
+const STUDIO_ASSET_BY_ID = new Map(
+  STUDIO_EDITABLE_ASSETS.map((asset) => [asset.id, asset] as const),
+)
 const STUDIO_SCENE_INSCRIPTION_OPTIONS = SCENE_INSCRIPTIONS.map((inscription) => ({
   id: inscription.id,
   label: inscription.label,
@@ -150,6 +152,10 @@ export default function App() {
   const [copySaveState, setCopySaveState] = useState<'idle' | 'saved' | 'error'>('idle')
   const [textLayoutSaveState, setTextLayoutSaveState] = useState<'idle' | 'saved' | 'error'>('idle')
   const [lightingSaveState, setLightingSaveState] = useState<'idle' | 'saved' | 'error'>('idle')
+  const [localFileSaveState, setLocalFileSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [localFileSaveMessage, setLocalFileSaveMessage] = useState('')
+  const localFileSavePendingRef = useRef(false)
+  const latestProjectSceneRef = useRef(PUBLISHED_STUDIO_SCENE)
   const [editorState, dispatchEditor] = useReducer(
     studioEditorReducer,
     PUBLISHED_STUDIO_SCENE.layout,
@@ -233,8 +239,10 @@ export default function App() {
     && editorSection === 'copy'
     && selectedSceneInscriptionId !== null
   const editingTransforms = editingLayout
+    && localFileSaveState !== 'saving'
     && (editorSection === 'layout' || editingSceneInscription)
   const editingTextTransforms = editingLayout
+    && localFileSaveState !== 'saving'
     && editorSection === 'copy'
     && !editingSceneInscription
   const selectedAssetLabel = useMemo(
@@ -447,8 +455,69 @@ export default function App() {
     return true
   }, [persistLightingSnapshot, studioLighting])
 
-  const toggleLayoutEditor = useCallback(() => {
+  const toggleLayoutEditor = useCallback(async () => {
+    // The ref closes the double-click gap before React renders the disabled button.
+    if (localFileSavePendingRef.current) return
     if (editingLayout) {
+      if (import.meta.env.DEV) {
+        const snapshot: StudioSceneSnapshot = {
+          schemaVersion: 1,
+          layout: latestLayoutRef.current,
+          copy: latestCopyRef.current,
+          textLayout: latestTextLayoutRef.current,
+          lighting: latestLightingRef.current,
+        }
+        // Keep a browser recovery copy, without clearing the undo history on failure.
+        const browserSaved = [
+          persistLayoutSnapshot(snapshot.layout),
+          persistCopySnapshot(snapshot.copy),
+          persistTextLayoutSnapshot(snapshot.textLayout),
+          persistLightingSnapshot(snapshot.lighting),
+        ].every(Boolean)
+        if (!browserSaved) {
+          setLocalFileSaveState('error')
+          setLocalFileSaveMessage('浏览器草稿保存失败，请保留编辑页面并重试“保存并退出”。')
+          return
+        }
+        localFileSavePendingRef.current = true
+        setLocalFileSaveState('saving')
+        setLocalFileSaveMessage('正在写入本地文件，请稍候…')
+        try {
+          // Only an explicit local save loads the disk-persistence client.
+          const { saveLocalSceneSnapshot } = await import('./editor/localScenePersistence')
+          await saveLocalSceneSnapshot(snapshot)
+          latestProjectSceneRef.current = snapshot
+          if (
+            !layoutsEqual(snapshot.layout, latestLayoutRef.current)
+            || !studioCopiesEqual(snapshot.copy, latestCopyRef.current)
+            || !studioTextLayoutsEqual(snapshot.textLayout, latestTextLayoutRef.current)
+            || !studioLightingEqual(snapshot.lighting, latestLightingRef.current)
+          ) {
+            setLocalFileSaveState('error')
+            setLocalFileSaveMessage('刚才的快照已写入，但保存期间又有新修改。请再次点击“保存并退出”。')
+            return
+          }
+          dispatchEditor({ type: 'mark-saved' })
+          dispatchTextEditor({ type: 'mark-saved' })
+          setSavedStudioCopy(snapshot.copy)
+          setSavedStudioLighting(snapshot.lighting)
+          setLayoutSaveState('saved')
+          setCopySaveState('saved')
+          setTextLayoutSaveState('saved')
+          setLightingSaveState('saved')
+          setLocalFileSaveState('saved')
+          setLocalFileSaveMessage('已保存到本地文件')
+          dispatchEditor({ type: 'select', assetId: null })
+          dispatchTextEditor({ type: 'select', layerId: null })
+          setEditingLayout(false)
+        } catch (error) {
+          setLocalFileSaveState('error')
+          setLocalFileSaveMessage(error instanceof Error ? error.message : '本地保存失败，请保留编辑页面并重试。')
+        } finally {
+          localFileSavePendingRef.current = false
+        }
+        return
+      }
       if (layoutDirty && !saveLayout()) {
         setEditorSection('layout')
         return
@@ -475,6 +544,8 @@ export default function App() {
     setCopySaveState('idle')
     setTextLayoutSaveState('idle')
     setLightingSaveState('idle')
+    setLocalFileSaveState('idle')
+    setLocalFileSaveMessage('')
     setEditingLayout(true)
   }, [
     cancelRelicOpening,
@@ -482,6 +553,10 @@ export default function App() {
     editingLayout,
     layoutDirty,
     lightingDirty,
+    persistCopySnapshot,
+    persistLayoutSnapshot,
+    persistLightingSnapshot,
+    persistTextLayoutSnapshot,
     saveCopy,
     saveLayout,
     saveLighting,
@@ -522,6 +597,25 @@ export default function App() {
 
   const resetStudioLighting = useCallback(() => {
     setStudioLighting(cloneStudioLighting(DEFAULT_STUDIO_LIGHTING))
+    setLightingSaveState('idle')
+  }, [])
+
+  const loadProjectScene = useCallback(() => {
+    if (!import.meta.env.DEV) return
+    const projectScene = latestProjectSceneRef.current
+
+    // Keep saved snapshots intact until the existing autosave confirms each write.
+    for (const [assetId, transform] of Object.entries(projectScene.layout)) {
+      dispatchEditor({ type: 'commit', assetId, transform })
+    }
+    dispatchEditor({ type: 'select', assetId: null })
+    dispatchTextEditor({ type: 'reset', defaults: projectScene.textLayout })
+    dispatchTextEditor({ type: 'select', layerId: null })
+    setStudioCopy(projectScene.copy)
+    setStudioLighting(cloneStudioLighting(projectScene.lighting))
+    setLayoutSaveState('idle')
+    setCopySaveState('idle')
+    setTextLayoutSaveState('idle')
     setLightingSaveState('idle')
   }, [])
 
@@ -793,6 +887,7 @@ export default function App() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (localFileSavePendingRef.current) return
       if (grimoireMemoryOpen) return
       const target = event.target
       if (
@@ -933,6 +1028,8 @@ export default function App() {
           <Suspense fallback={<StudioEditorLauncher onOpen={toggleLayoutEditor} loading />}>
           <StudioEditorControl
             enabled={editingLayout}
+            savingToLocalFile={localFileSaveState === 'saving'}
+            localFileSaveError={localFileSaveState === 'error' ? localFileSaveMessage : undefined}
             section={editorSection}
             copy={studioCopy}
             copyDirty={copyDirty}
@@ -956,6 +1053,7 @@ export default function App() {
             lightingIsDefault={studioLightingEqual(studioLighting, DEFAULT_STUDIO_LIGHTING)}
             selectedAssetId={editorState.selectedAssetId}
             selectedLabel={selectedAssetLabel}
+            layoutAssetOptions={STUDIO_EDITABLE_ASSETS}
             assetOptions={STUDIO_ASSETS}
             tool={editorState.tool}
             dirty={layoutDirty}
@@ -992,12 +1090,24 @@ export default function App() {
                   copy: studioCopy,
                   textLayout: textEditorState.draft,
                   lighting: studioLighting,
-                }} />
+                }}
+                  onLoadProjectScene={import.meta.env.DEV ? loadProjectScene : undefined}
+                  projectSceneSaveState={
+                    [layoutSaveState, copySaveState, textLayoutSaveState, lightingSaveState].includes('error')
+                      ? 'error'
+                      : layoutDirty || copyDirty || textLayoutDirty || lightingDirty
+                        ? 'pending'
+                        : 'saved'
+                  }
+                />
               </Suspense>
             )}
           />
           </Suspense>
-        ) : <StudioEditorLauncher onOpen={toggleLayoutEditor} />}
+        ) : <StudioEditorLauncher
+          onOpen={toggleLayoutEditor}
+          savedMessage={localFileSaveState === 'saved' ? localFileSaveMessage : undefined}
+        />}
         onResetCamera={resetCamera}
       />
 

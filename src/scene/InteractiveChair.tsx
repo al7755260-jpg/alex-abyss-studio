@@ -236,6 +236,7 @@ export function InteractiveChair({
             interactionProxy: true,
             studioAssetId: asset.id,
             chairTurnProxy: true,
+            relicHostOcclusionProxy: true,
           }}
           onPointerDown={(event) => event.stopPropagation()}
           onClick={handleClick}

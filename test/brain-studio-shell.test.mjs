@@ -105,7 +105,7 @@ test('新脑腔布局把家具、蜡烛与遗物提示收拢在内置地台范�
   assert.match(candles, /id: 'floor-far-right-back-pillar'[\s\S]{0,150}position: \[0\.5, FLOOR_CANDLE_BASE_Y, 1\.36\]/)
   assert.match(candles, /id: 'floor-back-right-cluster'[\s\S]{0,150}position: \[1\.45, -0\.018, -1\.7\]/)
 
-  assert.match(relics, /id: 'drowned-dream-core'[\s\S]{0,1300}hitPosition: \[0\.246, 1\.782, 0\.244\]/)
+  assert.match(relics, /id: 'drowned-dream-core'[\s\S]{0,1300}hitPosition: \[0\.342962, 1\.84, 0\.425573\]/)
   assert.match(relics, /id: 'fingerprint-casket'[\s\S]{0,1300}hitPosition: \[0\.979, 0\.692, -2\.248\]/)
 })
 

@@ -20,7 +20,7 @@ test('深渊古书注册在桌面并自动进入现有布局编辑链路', async
   assert.match(assets, /kind: 'grimoire'/)
   assert.match(assets, /models\/abyss-grimoire-animated\.glb/)
   assert.match(assets, /position: \[0\.72, 1\.8, -0\.7\]/)
-  assert.match(app, /createDefaultStudioLayout\(\[[\s\S]{0,100}\.\.\.STUDIO_ASSETS/)
+  assert.match(app, /createDefaultStudioLayout\(\[[\s\S]{0,100}\.\.\.STUDIO_EDITABLE_ASSETS/)
   assert.match(app, /assetOptions=\{STUDIO_ASSETS\}/)
   assert.match(control, /onSelectAsset\(event\.currentTarget\.value \|\| null\)/)
   assert.match(canvas, /ref=\{getEditableGroupRef\(asset\.id\)\}/)

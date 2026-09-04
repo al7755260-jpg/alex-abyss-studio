@@ -14,7 +14,7 @@ import {
   type MutableRefObject,
   type RefObject,
 } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, events, useFrame, type RootStore } from '@react-three/fiber'
 import { useThree } from '@react-three/fiber'
 import { AdaptiveDpr, OrbitControls, TransformControls, useProgress } from '@react-three/drei'
 import { Select, Selection } from '@react-three/postprocessing'
@@ -37,7 +37,10 @@ import {
   HIDDEN_RELICS,
   type HiddenRelicId,
 } from '../data/hiddenRelics'
-import { STUDIO_ASSETS } from '../data/studioAssets'
+import {
+  LOVECRAFT_PARTICLE_BUST_ASSET_ID,
+  STUDIO_ASSETS,
+} from '../data/studioAssets'
 import {
   COMPUTER_IDEA_INSCRIPTION_ID,
   PERFECT_TYRANNY_INSCRIPTION_ID,
@@ -71,11 +74,16 @@ import {
 import { CandelabraInstallation, CandleSet } from './CandleSet'
 import { CthulhuMaskInstallation } from './CthulhuMaskInstallation'
 import { DisplayRackInstallation } from './DisplayRackInstallation'
+import {
+  DISPLAY_RACK_INSTALLATION_SCALE,
+  DISPLAY_RACK_INTERACTION_SIZE,
+} from './displayRackGeometry'
 import { FinalMonitorTarget, HiddenRelics } from './HiddenRelics'
 import { InteractiveCabinet } from './InteractiveCabinet'
 import { InteractiveChair } from './InteractiveChair'
 import { InteractiveGrimoire } from './InteractiveGrimoire'
 import { InteractiveTentacleLamp } from './InteractiveTentacleLamp'
+import { LovecraftParticleMorphBust } from './LovecraftParticleMorphBust'
 import { MechanicalOctopusInstallation } from './MechanicalOctopusInstallation'
 import { MonitorInstallation } from './MonitorInstallation'
 import {
@@ -89,6 +97,8 @@ import { RendererExposureController, StudioLighting } from './StudioLighting'
 import { StudioLightingSettingsProvider } from './StudioLightingSettingsContext'
 import { VideoBeyondScreenInscription } from './VideoBeyondScreenInscription'
 import { resolveChairSwivelPoint } from './chairRotation'
+import { filterRelicHostProxyIntersections } from './relicPointerEvents'
+import { resolveLampRelicWorldRadius } from './lampGlow'
 
 const ArtifactDetailScene = lazy(() => import('./ArtifactDetailScene').then((module) => ({
   default: module.ArtifactDetailScene,
@@ -157,6 +167,10 @@ const CHAIR_TURNING_SUPPRESSED_RELIC_IDS = [INTERACTIVE_CHAIR_RELIC_ID] as const
 const ignoreTextLayerSelection = () => undefined
 const ignoreTextLayerCommit = () => undefined
 const ignoreStudioProxyRaycast = () => undefined
+const studioPointerEvents = (store: RootStore) => ({
+  ...events(store),
+  filter: filterRelicHostProxyIntersections,
+})
 
 // The 1.44× head silhouette needs enough breathing room at 1280×720. Move
 // the camera about 33% back along the approved sight line without changing its
@@ -665,6 +679,7 @@ function StudioScene({
   nativePointerActiveRef,
   cameraReturnRef,
   relicFocusRef,
+  relicHitPositionsRef,
   reducedMotionRef,
   view,
   foundRelicIds,
@@ -688,6 +703,7 @@ function StudioScene({
   nativePointerActiveRef: MutableRefObject<boolean>
   cameraReturnRef: MutableRefObject<CameraReturnState | null>
   relicFocusRef: MutableRefObject<RelicFocusState | null>
+  relicHitPositionsRef: MutableRefObject<ReadonlyMap<HiddenRelicId, [number, number, number]>>
   reducedMotionRef: MutableRefObject<boolean>
   view: MysteryView
   foundRelicIds: readonly HiddenRelicId[]
@@ -750,6 +766,16 @@ function StudioScene({
       return [relic.id, position] as const
     }),
   ), [chairTurnAngle, defaultStudioLayout, studioLayout])
+  useLayoutEffect(() => {
+    // Camera focus reads the same committed positions as the visible markers,
+    // including the chair's completed swivel; no per-frame React updates.
+    relicHitPositionsRef.current = resolvedRelicHitPositions
+  }, [relicHitPositionsRef, resolvedRelicHitPositions])
+  const lampTransform = studioLayout['tentacle-lamp'] ?? defaultStudioLayout['tentacle-lamp']
+  const lampRelicWorldRadius = resolveLampRelicWorldRadius(
+    lampTransform?.scale,
+    LOCAL_STUDIO_ASSET_BY_ID.get('tentacle-lamp')?.visualScale,
+  )
   const finalMonitorPosition = useMemo(() => {
     const defaultTransform = defaultStudioLayout['watching-monitor']
     const currentTransform = studioLayout['watching-monitor'] ?? defaultTransform
@@ -764,6 +790,8 @@ function StudioScene({
       ? resolveAttachedPoint(defaultTransform, currentTransform, DREAM_ARCHIVE_SHELF_DEFAULT_ANCHOR)
       : [...DREAM_ARCHIVE_SHELF_DEFAULT_ANCHOR] as [number, number, number]
   }, [defaultStudioLayout, studioLayout])
+  const lovecraftParticleBustTransform = studioLayout[LOVECRAFT_PARTICLE_BUST_ASSET_ID]
+    ?? defaultStudioLayout[LOVECRAFT_PARTICLE_BUST_ASSET_ID]
   const calloutTargetById = useMemo(() => new Map<string, ObjectCalloutTarget>([
     ...HIDDEN_RELICS.map((relic) => [relic.id, {
       id: relic.id,
@@ -902,6 +930,9 @@ function StudioScene({
               const isInteractiveChair = asset.kind === 'chair'
               const isInteractiveGrimoire = asset.kind === 'grimoire'
               const isInteractiveLamp = asset.kind === 'lamp'
+              const interactionProxySize = isDreamArchiveShelf
+                ? DISPLAY_RACK_INTERACTION_SIZE
+                : asset.placeholderSize
               if (!transform) return null
 
               const proxyCalloutId = isDreamArchiveShelf
@@ -1004,6 +1035,28 @@ function StudioScene({
                       <AssetSlot asset={localAsset} active={!detailRelic} />
                     )}
                   </Select>
+                  {isDreamArchiveShelf && lovecraftParticleBustTransform ? (
+                    <group
+                      name="lovecraft-particle-bust-rack-space"
+                      scale={DISPLAY_RACK_INSTALLATION_SCALE}
+                    >
+                      <Select
+                        name={`relic-host:${LOVECRAFT_PARTICLE_BUST_ASSET_ID}`}
+                        enabled={
+                          editingLayout
+                          && selectedAssetId === LOVECRAFT_PARTICLE_BUST_ASSET_ID
+                        }
+                      >
+                        <LovecraftParticleMorphBust
+                          ref={getEditableGroupRef(LOVECRAFT_PARTICLE_BUST_ASSET_ID)}
+                          transform={lovecraftParticleBustTransform}
+                          editing={editingLayout}
+                          interactive={!detailRelic && !editingLayout}
+                          onSelect={() => onSelectAsset(LOVECRAFT_PARTICLE_BUST_ASSET_ID)}
+                        />
+                      </Select>
+                    </group>
+                  ) : null}
                   {asset.id === 'reliquary-computer' ? (
                     <Suspense fallback={null}>
                       <ComputerIdeaInscription
@@ -1031,10 +1084,11 @@ function StudioScene({
                         : Mesh.prototype.raycast
                     }
                     name={`interaction-proxy:${asset.id}`}
-                    position={[0, asset.placeholderSize[1] / 2, 0]}
+                    position={[0, interactionProxySize[1] / 2, 0]}
                     userData={{
                       interactionProxy: true,
                       studioAssetId: asset.id,
+                      hostChildOcclusionProxy: isDreamArchiveShelf,
                     }}
                     onClick={editingLayout ? (event) => {
                       if (event.button !== 0 || event.delta > 8) return
@@ -1064,7 +1118,7 @@ function StudioScene({
                       if (isDreamArchiveShelf || isVintageTelevision) document.body.style.cursor = ''
                     } : undefined}
                   >
-                    <boxGeometry args={asset.placeholderSize} />
+                    <boxGeometry args={interactionProxySize} />
                     <meshBasicMaterial
                       visible={false}
                       transparent
@@ -1151,6 +1205,7 @@ function StudioScene({
                   suppressedRelicIds={chairTurning ? CHAIR_TURNING_SUPPRESSED_RELIC_IDS : undefined}
                   fingerprintCasketAccessible={cabinetDoorOpen}
                   hitPositions={resolvedRelicHitPositions}
+                  lampRelicWorldRadius={lampRelicWorldRadius}
                   onOpenRelic={onOpenRelic}
                 />
                 <FinalMonitorTarget
@@ -1261,6 +1316,7 @@ export const StudioCanvas = memo(forwardRef<StudioCanvasHandle, StudioCanvasProp
       : null,
   )
   const relicFocusRef = useRef<RelicFocusState | null>(null)
+  const relicHitPositionsRef = useRef<ReadonlyMap<HiddenRelicId, [number, number, number]>>(new Map())
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -1298,9 +1354,11 @@ export const StudioCanvas = memo(forwardRef<StudioCanvasHandle, StudioCanvasProp
 
         const defaultTransform = defaultStudioLayout[relic.hostAssetId]
         const currentTransform = studioLayout[relic.hostAssetId] ?? defaultTransform
-        const resolvedHitPosition = defaultTransform && currentTransform
-          ? resolveAttachedPoint(defaultTransform, currentTransform, relic.hitPosition)
-          : relic.hitPosition
+        const resolvedHitPosition = relicHitPositionsRef.current.get(relicId) ?? (
+          defaultTransform && currentTransform
+            ? resolveAttachedPoint(defaultTransform, currentTransform, relic.hitPosition)
+            : relic.hitPosition
+        )
 
         cameraReturnRef.current = null
         clearOrbitMomentum(controls)
@@ -1362,6 +1420,7 @@ export const StudioCanvas = memo(forwardRef<StudioCanvasHandle, StudioCanvasProp
 
   return (
     <Canvas
+      events={studioPointerEvents}
       shadows={{ type: PCFShadowMap }}
       frameloop={renderPaused ? 'never' : 'always'}
       dpr={[0.75, 1.25]}
@@ -1405,6 +1464,7 @@ export const StudioCanvas = memo(forwardRef<StudioCanvasHandle, StudioCanvasProp
               nativePointerActiveRef={nativePointerActiveRef}
               cameraReturnRef={cameraReturnRef}
               relicFocusRef={relicFocusRef}
+              relicHitPositionsRef={relicHitPositionsRef}
               reducedMotionRef={reducedMotionRef}
               view={view}
               foundRelicIds={foundRelicIds}

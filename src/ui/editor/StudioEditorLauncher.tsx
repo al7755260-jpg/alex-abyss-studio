@@ -12,9 +12,11 @@ export function EditLayoutIcon() {
 export function StudioEditorLauncher({
   onOpen,
   loading = false,
+  savedMessage,
 }: {
   onOpen: () => void
   loading?: boolean
+  savedMessage?: string
 }) {
   return (
     <div className="studio-editor">
@@ -30,6 +32,9 @@ export function StudioEditorLauncher({
         <EditLayoutIcon />
         {loading ? '正在打开编辑器…' : '编辑画面'}
       </button>
+      {savedMessage ? (
+        <p className="studio-editor__file-confirmation" role="status">{savedMessage}</p>
+      ) : null}
     </div>
   )
 }

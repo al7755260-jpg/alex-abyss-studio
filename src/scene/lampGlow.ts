@@ -4,8 +4,25 @@ export const LAMP_GLOBE_CENTER = [0.00319, 1.96228, -0.00477] as const
 export const LAMP_GLOBE_RADIUS = 0.2081
 export const LAMP_GLOBE_INTERACTION_RADIUS = 0.255
 export const LAMP_RELIC_APERTURE_RADIUS = 0.12
-// drowned-dream-core expressed in the lamp's default local coordinates.
-export const LAMP_RELIC_APERTURE_CENTER = [0.0126, 1.782, 0.04235] as const
+// Keep the hint outside the opaque globe/cage instead of buried inside it.
+// This lamp-local point also determines the globe toggle's click aperture.
+export const LAMP_RELIC_APERTURE_CENTER = [0.17, 1.84, 0.175] as const
+const UNIT_LAMP_SCALE = [1, 1, 1] as const
+
+/** Matches getWorldScale() on the globe proxy's editor-root / visualScale hierarchy. */
+export function resolveLampRelicWorldRadius(
+  hostScale: readonly [number, number, number] = UNIT_LAMP_SCALE,
+  visualScale: readonly [number, number, number] = UNIT_LAMP_SCALE,
+) {
+  if ([...hostScale, ...visualScale].some((value) => !Number.isFinite(value) || value <= 0)) {
+    throw new RangeError('Lamp scales must contain finite positive values')
+  }
+  return LAMP_RELIC_APERTURE_RADIUS * Math.max(
+    hostScale[0] * visualScale[0],
+    hostScale[1] * visualScale[1],
+    hostScale[2] * visualScale[2],
+  )
+}
 
 export type LampGlowSnapshot = Readonly<{
   level: number

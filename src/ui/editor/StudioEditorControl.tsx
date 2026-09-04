@@ -24,6 +24,8 @@ export type StudioSceneInscriptionOption = {
 
 type StudioEditorControlProps = {
   enabled: boolean
+  savingToLocalFile?: boolean
+  localFileSaveError?: string
   section: StudioEditorSection
   copy: StudioCopy
   copyDirty: boolean
@@ -42,6 +44,7 @@ type StudioEditorControlProps = {
   lightingDirty: boolean
   lightingSaveState: 'idle' | 'saved' | 'error'
   lightingIsDefault: boolean
+  layoutAssetOptions: readonly { id: string; label: string }[]
   selectedAssetId: string | null
   selectedLabel: string | null
   assetOptions: readonly { id: string; label: string }[]
@@ -153,6 +156,8 @@ function formatLightingValue(field: StudioLightingField, value: number) {
 
 export function StudioEditorControl({
   enabled,
+  savingToLocalFile = false,
+  localFileSaveError,
   section,
   copy,
   copyDirty,
@@ -171,6 +176,7 @@ export function StudioEditorControl({
   lightingDirty,
   lightingSaveState,
   lightingIsDefault,
+  layoutAssetOptions,
   selectedAssetId,
   selectedLabel,
   assetOptions,
@@ -207,7 +213,10 @@ export function StudioEditorControl({
     (inscription) => inscription.id === selectedSceneInscriptionId,
   ) ?? null
   const editingSceneInscription = selectedSceneInscription !== null
-  const selectedCopyAssetId = editingSceneInscription ? null : selectedAssetId
+  const selectedCopyAssetId = !editingSceneInscription
+    && assetOptions.some(({ id }) => id === selectedAssetId)
+    ? selectedAssetId
+    : null
   const activeTextLabel = selectedSceneInscription?.label ?? selectedTextLabel
   const activeTextTool = editingSceneInscription ? tool : textTool
   const hasSelectedText = editingSceneInscription || selectedTextLayerId !== null
@@ -250,18 +259,35 @@ export function StudioEditorControl({
         type="button"
         aria-pressed={enabled}
         aria-expanded={enabled}
+        aria-busy={savingToLocalFile}
+        disabled={savingToLocalFile}
         onClick={onToggle}
       >
         <EditLayoutIcon />
-        {enabled ? '保存并退出' : '编辑画面'}
+        {savingToLocalFile ? '正在保存…' : enabled ? '保存并退出' : '编辑画面'}
       </button>
 
       {enabled ? (
-        <section className="studio-editor__panel" aria-label="画面编辑器">
+        <section className="studio-editor__panel" aria-label="画面编辑器" aria-busy={savingToLocalFile}>
           <div className="studio-editor__heading">
             <span>SCENE COMPOSER</span>
             <strong>画面编辑模式</strong>
           </div>
+
+          {localFileSaveError ? (
+            <p className="studio-editor__file-status studio-editor__file-status--error" role="alert">
+              {localFileSaveError}
+            </p>
+          ) : null}
+          {import.meta.env.DEV ? (
+            <p className="studio-editor__file-status" role="status">
+              {savingToLocalFile
+                ? '正在写入本地文件，请稍候…'
+                : '点击“保存并退出”，将物体、文字和光照保存到本地项目文件。'}
+            </p>
+          ) : null}
+
+          <fieldset className="studio-editor__fields" disabled={savingToLocalFile} aria-label="场景编辑控件">
 
           <div className="studio-editor__tabs" role="tablist" aria-label="编辑内容">
             <button
@@ -305,7 +331,7 @@ export function StudioEditorControl({
                   onChange={(event) => onSelectAsset(event.currentTarget.value || null)}
                 >
                   <option value="">请选择场景对象</option>
-                  {assetOptions.map((asset) => (
+                  {layoutAssetOptions.map((asset) => (
                     <option key={asset.id} value={asset.id}>
                       {copy.assetLabels[asset.id] || asset.label}
                     </option>
@@ -665,6 +691,7 @@ export function StudioEditorControl({
             {status}
           </div>
           {sceneExport}
+          </fieldset>
         </section>
       ) : null}
     </div>

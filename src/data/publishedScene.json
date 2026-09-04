@@ -64,9 +64,9 @@
         0
       ],
       "scale": [
-        1.2,
-        1.2,
-        1.2
+        1,
+        1,
+        1
       ]
     },
     "eldritch-keyboard": {
@@ -122,9 +122,9 @@
     },
     "demonic-display-rack": {
       "position": [
-        -2.55,
+        -2.425,
         0,
-        0.025
+        -0.55
       ],
       "rotation": [
         0,
@@ -132,9 +132,26 @@
         0
       ],
       "scale": [
-        1.25,
-        1.25,
-        1.25
+        1.7,
+        1.7,
+        1.7
+      ]
+    },
+    "lovecraft-particle-bust": {
+      "position": [
+        -0.55,
+        2.433,
+        -0.018074
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.75,
+        0.75,
+        0.75
       ]
     },
     "cthulhu-wall-mask": {
@@ -326,8 +343,8 @@
     }
   },
   "copy": {
-    "brandTitle": "Alexi的奇怪脑洞",
-    "brandSubtitle": "LUX3D 深渊资产陈列",
+    "brandTitle": "AlexLi的奇怪脑洞",
+    "brandSubtitle": "“凝视深渊吧”",
     "objectiveLabel": "当前任务",
     "objectivePendingTitle": "找到ALEX消失的秘密",
     "objectivePendingDescription": "点击家具附近发光的遗物线索；镜头推进后即可查看并归档",

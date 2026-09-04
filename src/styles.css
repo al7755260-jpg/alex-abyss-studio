@@ -1779,6 +1779,48 @@ button:focus-visible {
   stroke-width: 1.35;
 }
 
+.studio-editor__toggle:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.studio-editor__fields {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.studio-editor__fields:disabled {
+  opacity: 0.65;
+}
+
+.studio-editor__file-status {
+  margin: 12px 0;
+  color: #acbdb1;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.studio-editor__file-status--error {
+  padding: 10px;
+  border: 1px solid rgb(209 70 57 / 45%);
+  color: #e8ac97;
+}
+
+.studio-editor__file-confirmation {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: max-content;
+  max-width: 240px;
+  margin: 8px 0 0;
+  color: #acd1bd;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+}
+
 .studio-editor__panel {
   position: fixed;
   z-index: 12;

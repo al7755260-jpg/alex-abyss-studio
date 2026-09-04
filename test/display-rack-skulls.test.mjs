@@ -143,6 +143,6 @@ test('头骨集合挂在陈列架本地坐标组内，随柜体一起移动和�
   assert.match(installation, /import \{ DemonicRackSkulls \}/)
   assert.match(installation, /position=\{asset\.position\}/)
   assert.match(installation, /rotation=\{asset\.rotation\}/)
-  assert.match(installation, /scale=\{\[0\.7, 0\.7, 0\.7\]\}/)
+  assert.match(installation, /scale=\{DISPLAY_RACK_INSTALLATION_SCALE\}/)
   assert.match(installation, /<DemonicRackSkulls \/>/)
 })
