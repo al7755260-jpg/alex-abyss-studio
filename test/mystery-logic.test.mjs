@@ -115,42 +115,7 @@ test('书房场景只渲染提示光点、不加载遗物GLB并保留鼠标命�
   assert.doesNotMatch(source, /relic\.src|relic\.position/)
 })
 
-test('遗物鼠标命中半径按类型设定，光点、数据半径和镜头推进距离不变', async () => {
-  const [hints, canvas] = await Promise.all([
-    readFile(new URL('../src/scene/HiddenRelics.tsx', import.meta.url), 'utf8'),
-    readFile(new URL('../src/scene/StudioCanvas.tsx', import.meta.url), 'utf8'),
-  ])
 
-  assert.match(hints, /const RELIC_ACTIVATION_RADIUS_SCALE = 2/)
-  assert.match(hints, /import \{ LAMP_RELIC_APERTURE_RADIUS \} from '\.\/lampGlow'/)
-  assert.match(hints, /const isDrownedDreamCore = relic\.id === 'drowned-dream-core'/)
-  assert.match(
-    hints,
-    /const activationRadiusScale = isFingerprintCasket[\s\S]{0,80}\? 0\.75[\s\S]{0,100}: isDrownedDreamCore[\s\S]{0,100}\? lampRelicWorldRadius \/ relic\.hitRadius[\s\S]{0,80}: RELIC_ACTIVATION_RADIUS_SCALE/,
-  )
-  assert.match(
-    hints,
-    /args=\{\[relic\.hitRadius \* activationRadiusScale, 18, 12\]\}/,
-  )
-  assert.match(hints, /args=\{\[0\.055, 14, 10\]\}/)
-  assert.match(hints, /args=\{\[0\.021, 14, 10\]\}/)
-
-  assert.deepEqual(
-    HIDDEN_RELICS.map(({ id, hitRadius }) => [id, hitRadius]),
-    [
-      ['tide-index-seal', 0.22],
-      ['deviant-iris-wheel', 0.27],
-      ['drowned-dream-core', 0.3],
-      ['fingerprint-casket', 0.24],
-      ['voice-hyoid', 0.2],
-      ['spinal-clasp', 0.26],
-    ],
-  )
-  assert.match(
-    canvas,
-    /MathUtils\.clamp\(1\.68 \+ relic\.hitRadius \* 1\.3, 1\.9, 2\.1\)/,
-  )
-})
 
 test('六个遗物提示点贴近宿主表面且收录后不再渲染', async () => {
   const [relics, hints] = await Promise.all([

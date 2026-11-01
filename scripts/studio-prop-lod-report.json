@@ -1,0 +1,757 @@
+{
+  "totals": {
+    "original": 1683068,
+    "realtime": 435957
+  },
+  "reports": [
+    {
+      "name": "environment/alex-mechanical-open-head",
+      "ratio": 0.35,
+      "error": 0.0005,
+      "method": "strict",
+      "parameters": null,
+      "measuredErrors": null,
+      "sourceSha256": "f45bf6ef8fdeaebb0668fb52047c17cc591f8ac6882966dc2edb2ae05ccf2c82",
+      "outputSha256": "2987e727ed2d22d36b8b43f95608994afab8e44766ef7ee22f15308aa3d29be9",
+      "originalTriangles": 569512,
+      "realtimeTriangles": 199322,
+      "reductionPercent": 65.001,
+      "originalBytes": 4180268,
+      "realtimeBytes": 1473280,
+      "originalBounds": {
+        "min": [
+          -0.4523548281407063,
+          0,
+          -0.387220308589816
+        ],
+        "max": [
+          0.4523548281407063,
+          0.978790283203125,
+          0.387250826167941
+        ]
+      },
+      "realtimeBounds": {
+        "min": [
+          -0.4523548281407063,
+          0,
+          -0.3871605661487501
+        ],
+        "max": [
+          0.4521158583764427,
+          0.9786707983209932,
+          0.38713134128580917
+        ]
+      },
+      "boundsAxisDelta": [
+        0.00023896976426363015,
+        0.00011948488213175956,
+        0.00011948488213181507
+      ],
+      "maxBoundsDeltaPercent": 0.024415,
+      "verified": {
+        "sourceUntouched": true,
+        "uvAttributes": true,
+        "survivingFullVertexAttributeTuplesUnchanged": true,
+        "everyVertexReferenced": true,
+        "boundsFromReferencedIndices": true,
+        "noDuplicateTextures": true,
+        "materialSlots": true,
+        "transforms": true
+      }
+    },
+    {
+      "name": "desk",
+      "ratio": 0.2,
+      "error": 0.01,
+      "method": "attribute-aware",
+      "parameters": {
+        "normalWeight": 0.25,
+        "uvWeight": 1,
+        "flags": [
+          "Permissive"
+        ]
+      },
+      "measuredErrors": [
+        0.00447494862601161
+      ],
+      "sourceSha256": "6b609611793db5afc9d3b5f9f4b51e291f4e3cc86c4791aac387d27ad23f35a5",
+      "outputSha256": "e1b0776072c60226582fb0780fb952472b4e1847aff11a31d043b64403b6868f",
+      "originalTriangles": 92142,
+      "realtimeTriangles": 18414,
+      "reductionPercent": 80.016,
+      "originalBytes": 1786316,
+      "realtimeBytes": 232996,
+      "originalBounds": {
+        "min": [
+          -0.5999267816514475,
+          -0.37170668909679083,
+          -0.3245064158657744
+        ],
+        "max": [
+          0.5999267816514475,
+          0.37199965785843236,
+          0.3248726268178263
+        ]
+      },
+      "realtimeBounds": {
+        "min": [
+          -0.5999267816514475,
+          -0.37170668909679083,
+          -0.3245064158657744
+        ],
+        "max": [
+          0.5999267816514475,
+          0.37199965785843236,
+          0.3248726268178263
+        ]
+      },
+      "boundsAxisDelta": [
+        0,
+        0,
+        0
+      ],
+      "maxBoundsDeltaPercent": 0,
+      "verified": {
+        "sourceUntouched": true,
+        "uvAttributes": true,
+        "survivingFullVertexAttributeTuplesUnchanged": true,
+        "everyVertexReferenced": true,
+        "boundsFromReferencedIndices": true,
+        "noDuplicateTextures": true,
+        "materialSlots": true,
+        "transforms": true
+      }
+    },
+    {
+      "name": "monitor",
+      "ratio": 0.2,
+      "error": 0.01,
+      "method": "attribute-aware",
+      "parameters": {
+        "normalWeight": 0.25,
+        "uvWeight": 1,
+        "flags": [
+          "Permissive"
+        ]
+      },
+      "measuredErrors": [
+        0.004256248939782381
+      ],
+      "sourceSha256": "01cd0ca41058b915ba27505298aecc8c82dbca4194a01eaca1b42ac21f9d3cf1",
+      "outputSha256": "8aef30406b19d219d0267ad50295596f690e208deaf99504eedf7896a4c4a80c",
+      "originalTriangles": 94776,
+      "realtimeTriangles": 18890,
+      "reductionPercent": 80.069,
+      "originalBytes": 1890288,
+      "realtimeBytes": 245236,
+      "originalBounds": {
+        "min": [
+          -0.3100000023841858,
+          -0.24701041044378194,
+          -0.11645222763366603
+        ],
+        "max": [
+          0.3100000023841858,
+          0.24712393583528006,
+          0.11667927841666226
+        ]
+      },
+      "realtimeBounds": {
+        "min": [
+          -0.3100000023841858,
+          -0.24701041044378194,
+          -0.11645222763366603
+        ],
+        "max": [
+          0.3100000023841858,
+          0.24712393583528006,
+          0.11667927841666226
+        ]
+      },
+      "boundsAxisDelta": [
+        0,
+        0,
+        0
+      ],
+      "maxBoundsDeltaPercent": 0,
+      "verified": {
+        "sourceUntouched": true,
+        "uvAttributes": true,
+        "survivingFullVertexAttributeTuplesUnchanged": true,
+        "everyVertexReferenced": true,
+        "boundsFromReferencedIndices": true,
+        "noDuplicateTextures": true,
+        "materialSlots": true,
+        "transforms": true
+      }
+    },
+    {
+      "name": "computer",
+      "ratio": 0.2,
+      "error": 0.01,
+      "method": "attribute-aware",
+      "parameters": {
+        "normalWeight": 0.25,
+        "uvWeight": 1,
+        "flags": [
+          "Permissive"
+        ]
+      },
+      "measuredErrors": [
+        0.009987554512917995
+      ],
+      "sourceSha256": "64d8bc68c36a4b8a61e72771cf757484e924a522bdb99c90ed118fd8f86d6d41",
+      "outputSha256": "68e0585a3b061d8479608cb2e5af33eb6fc3852a0f8793d901ce171478d689b6",
+      "originalTriangles": 94231,
+      "realtimeTriangles": 33157,
+      "reductionPercent": 64.813,
+      "originalBytes": 2697100,
+      "realtimeBytes": 508604,
+      "originalBounds": {
+        "min": [
+          -0.24911537953909182,
+          -0.24981689453125,
+          -0.12366922282924672
+        ],
+        "max": [
+          0.24923744985159182,
+          0.2498779296875,
+          0.12424907171478292
+        ]
+      },
+      "realtimeBounds": {
+        "min": [
+          -0.24911537953909182,
+          -0.24981689453125,
+          -0.12366922282924672
+        ],
+        "max": [
+          0.24923744985159182,
+          0.2498779296875,
+          0.12424907171478292
+        ]
+      },
+      "boundsAxisDelta": [
+        0,
+        0,
+        0
+      ],
+      "maxBoundsDeltaPercent": 0,
+      "verified": {
+        "sourceUntouched": true,
+        "uvAttributes": true,
+        "survivingFullVertexAttributeTuplesUnchanged": true,
+        "everyVertexReferenced": true,
+        "boundsFromReferencedIndices": true,
+        "noDuplicateTextures": true,
+        "materialSlots": true,
+        "transforms": true
+      }
+    },
+    {
+      "name": "keyboard",
+      "ratio": 0.2,
+      "error": 0.01,
+      "method": "attribute-aware",
+      "parameters": {
+        "normalWeight": 0.25,
+        "uvWeight": 1,
+        "flags": [
+          "Permissive"
+        ]
+      },
+      "measuredErrors": [
+        0.0061561488546431065
+      ],
+      "sourceSha256": "ca09591c03970074ef211f83f043520a0f9e03c147624390e873850eab399278",
+      "outputSha256": "eeab084df67ad5a99c5755fdfb460e9e53587bd68021118dd34a1c2128ce5068",
+      "originalTriangles": 57188,
+      "realtimeTriangles": 11348,
+      "reductionPercent": 80.157,
+      "originalBytes": 1504076,
+      "realtimeBytes": 170204,
+      "originalBounds": {
+        "min": [
+          -0.25993651390308514,
+          -0.04748889681369962,
+          -0.16434809716640233
+        ],
+        "max": [
+          0.2596191156050196,
+          0.047520635093785464,
+          0.16434809716640233
+        ]
+      },
+      "realtimeBounds": {
+        "min": [
+          -0.25993651390308514,
+          -0.04748889681369962,
+          -0.16434809716640233
+        ],
+        "max": [
+          0.2596191156050196,
+          0.047520635093785464,
+          0.16434809716640233
+        ]
+      },
+      "boundsAxisDelta": [
+        0,
+        0,
+        0
+      ],
+      "maxBoundsDeltaPercent": 0,
+      "verified": {
+        "sourceUntouched": true,
+        "uvAttributes": true,
+        "survivingFullVertexAttributeTuplesUnchanged": true,
+        "everyVertexReferenced": true,
+        "boundsFromReferencedIndices": true,
+        "noDuplicateTextures": true,
+        "materialSlots": true,
+        "transforms": true
+      }
+    },
+    {
+      "name": "bookcase",
+      "ratio": 0.2,
+      "error": 0.01,
+      "method": "attribute-aware",
+      "parameters": {
+        "normalWeight": 0.25,
+        "uvWeight": 1,
+        "flags": [
+          "Permissive"
+        ]
+      },
+      "measuredErrors": [
+        0.004200079943984747
+      ],
+      "sourceSha256": "abb08165abd9ffca8b81aea4840fefd6223f1e54f5c37653d7c05e1c99087873",
+      "outputSha256": "c12e344acaa941f82c8ca81e45e12439466b47b09bae3399d6d41b31eea3e4fc",
+      "originalTriangles": 94586,
+      "realtimeTriangles": 18898,
+      "reductionPercent": 80.02,
+      "originalBytes": 1727556,
+      "realtimeBytes": 256776,
+      "originalBounds": {
+        "min": [
+          -0.5155604449411623,
+          -0.7999023556694738,
+          -0.2445970263972822
+        ],
+        "max": [
+          0.5155604449411623,
+          0.800000011920929,
+          0.24488999515164778
+        ]
+      },
+      "realtimeBounds": {
+        "min": [
+          -0.5155604449411623,
+          -0.7999023556694738,
+          -0.2445970263972822
+        ],
+        "max": [
+          0.5155604449411623,
+          0.800000011920929,
+          0.24488999515164778
+        ]
+      },
+      "boundsAxisDelta": [
+        0,
+        0,
+        0
+      ],
+      "maxBoundsDeltaPercent": 0,
+      "verified": {
+        "sourceUntouched": true,
+        "uvAttributes": true,
+        "survivingFullVertexAttributeTuplesUnchanged": true,
+        "everyVertexReferenced": true,
+        "boundsFromReferencedIndices": true,
+        "noDuplicateTextures": true,
+        "materialSlots": true,
+        "transforms": true
+      }
+    },
+    {
+      "name": "demonic-cthulhu-display-rack",
+      "ratio": 0.2,
+      "error": 0.01,
+      "method": "attribute-aware",
+      "parameters": {
+        "normalWeight": 0.25,
+        "uvWeight": 1,
+        "flags": [
+          "Permissive"
+        ]
+      },
+      "measuredErrors": [
+        0.0034477340523153543
+      ],
+      "sourceSha256": "ce7ddaab10305359377b6b2eda01eb9a37b2f16c84a6a304a26d33589c99a626",
+      "outputSha256": "8137db5d842e41a1ae273f5efbd0e9a2f8d301945fd80b696105f5b20cefe1a7",
+      "originalTriangles": 94032,
+      "realtimeTriangles": 18680,
+      "reductionPercent": 80.134,
+      "originalBytes": 1734620,
+      "realtimeBytes": 248496,
+      "originalBounds": {
+        "min": [
+          -0.6326715917165553,
+          -0.75,
+          -0.24044770653401287
+        ],
+        "max": [
+          0.6327631444509303,
+          0.75,
+          0.24044770653401287
+        ]
+      },
+      "realtimeBounds": {
+        "min": [
+          -0.6326715917165553,
+          -0.75,
+          -0.24044770653401287
+        ],
+        "max": [
+          0.6327631444509303,
+          0.75,
+          0.24044770653401287
+        ]
+      },
+      "boundsAxisDelta": [
+        0,
+        0,
+        0
+      ],
+      "maxBoundsDeltaPercent": 0,
+      "verified": {
+        "sourceUntouched": true,
+        "uvAttributes": true,
+        "survivingFullVertexAttributeTuplesUnchanged": true,
+        "everyVertexReferenced": true,
+        "boundsFromReferencedIndices": true,
+        "noDuplicateTextures": true,
+        "materialSlots": true,
+        "transforms": true
+      }
+    },
+    {
+      "name": "cthulhu-wall-mask",
+      "ratio": 0.2,
+      "error": 0.01,
+      "method": "attribute-aware",
+      "parameters": {
+        "normalWeight": 0.25,
+        "uvWeight": 1,
+        "flags": [
+          "Permissive"
+        ]
+      },
+      "measuredErrors": [
+        0.0038736730348318815
+      ],
+      "sourceSha256": "eec6edd6f0d5d1add05458718baf72d0f2f5714cbe3ced767184b1d941b5078a",
+      "outputSha256": "f2d4ca12214d876cd9c9d7db60d4b40035a81f0e88fcbed0afc2a0137ec00686",
+      "originalTriangles": 118732,
+      "realtimeTriangles": 23672,
+      "reductionPercent": 80.063,
+      "originalBytes": 2123092,
+      "realtimeBytes": 306148,
+      "originalBounds": {
+        "min": [
+          -0.15996662746518608,
+          -0.2614016853112844,
+          -0.07416765246556019
+        ],
+        "max": [
+          0.15999854464287977,
+          0.2614016853112844,
+          0.07416765246556019
+        ]
+      },
+      "realtimeBounds": {
+        "min": [
+          -0.15996662746518608,
+          -0.2614016853112844,
+          -0.07416765246556019
+        ],
+        "max": [
+          0.15999854464287977,
+          0.2614016853112844,
+          0.07416765246556019
+        ]
+      },
+      "boundsAxisDelta": [
+        0,
+        0,
+        0
+      ],
+      "maxBoundsDeltaPercent": 0,
+      "verified": {
+        "sourceUntouched": true,
+        "uvAttributes": true,
+        "survivingFullVertexAttributeTuplesUnchanged": true,
+        "everyVertexReferenced": true,
+        "boundsFromReferencedIndices": true,
+        "noDuplicateTextures": true,
+        "materialSlots": true,
+        "transforms": true
+      }
+    },
+    {
+      "name": "lamp",
+      "ratio": 0.2,
+      "error": 0.01,
+      "method": "attribute-aware",
+      "parameters": {
+        "normalWeight": 0.25,
+        "uvWeight": 1,
+        "flags": [
+          "Permissive"
+        ]
+      },
+      "measuredErrors": [
+        0.0022371551021933556,
+        0.009974393993616104
+      ],
+      "sourceSha256": "a7c6777117662553a520e3c9ecc5622957fe8c04fac05ec386051aae47252778",
+      "outputSha256": "02ef4254f3d9d4ec427d2c8191b02db48f688d56a2a7f6f645938f5dd90e4fc7",
+      "originalTriangles": 99095,
+      "realtimeTriangles": 19832,
+      "reductionPercent": 79.987,
+      "originalBytes": 1843700,
+      "realtimeBytes": 240228,
+      "originalBounds": {
+        "min": [
+          -0.39310626791988007,
+          -0.899999952314829,
+          -0.39393019889586994
+        ],
+        "max": [
+          0.39310626791988007,
+          0.8998900890364894,
+          0.39425981555006856
+        ]
+      },
+      "realtimeBounds": {
+        "min": [
+          -0.39310626791988007,
+          -0.899999952314829,
+          -0.39393019889586994
+        ],
+        "max": [
+          0.39310626791988007,
+          0.8998900890364894,
+          0.39425981555006856
+        ]
+      },
+      "boundsAxisDelta": [
+        0,
+        0,
+        0
+      ],
+      "maxBoundsDeltaPercent": 0,
+      "verified": {
+        "sourceUntouched": true,
+        "uvAttributes": true,
+        "survivingFullVertexAttributeTuplesUnchanged": true,
+        "everyVertexReferenced": true,
+        "boundsFromReferencedIndices": true,
+        "noDuplicateTextures": true,
+        "materialSlots": true,
+        "transforms": true
+      }
+    },
+    {
+      "name": "mechanical-cthulhu-octopus",
+      "ratio": 0.2,
+      "error": 0.01,
+      "method": "attribute-aware",
+      "parameters": {
+        "normalWeight": 0.25,
+        "uvWeight": 1,
+        "flags": [
+          "Permissive"
+        ]
+      },
+      "measuredErrors": [
+        0.004475105553865433
+      ],
+      "sourceSha256": "8080f7a9257cff2aae5e51a96121aac0072dadb0ad3c792b86035d6c7084fc94",
+      "outputSha256": "be39232bb76829064b50be16458ce482218ed9df4876ec0636d1cf63278e591a",
+      "originalTriangles": 151208,
+      "realtimeTriangles": 30240,
+      "reductionPercent": 80.001,
+      "originalBytes": 2831652,
+      "realtimeBytes": 427360,
+      "originalBounds": {
+        "min": [
+          -0.17499999701976776,
+          -0.1303674406339467,
+          -0.09299294896662338
+        ],
+        "max": [
+          0.17499999701976776,
+          0.1303674406339467,
+          0.09301431127094709
+        ]
+      },
+      "realtimeBounds": {
+        "min": [
+          -0.17499999701976776,
+          -0.1303674406339467,
+          -0.09299294896662338
+        ],
+        "max": [
+          0.17499999701976776,
+          0.1303674406339467,
+          0.09301431127094709
+        ]
+      },
+      "boundsAxisDelta": [
+        0,
+        0,
+        0
+      ],
+      "maxBoundsDeltaPercent": 0,
+      "verified": {
+        "sourceUntouched": true,
+        "uvAttributes": true,
+        "survivingFullVertexAttributeTuplesUnchanged": true,
+        "everyVertexReferenced": true,
+        "boundsFromReferencedIndices": true,
+        "noDuplicateTextures": true,
+        "materialSlots": true,
+        "transforms": true
+      }
+    },
+    {
+      "name": "vintage-television",
+      "ratio": 0.2,
+      "error": 0.01,
+      "method": "attribute-aware",
+      "parameters": {
+        "normalWeight": 0.25,
+        "uvWeight": 1,
+        "flags": [
+          "Permissive"
+        ]
+      },
+      "measuredErrors": [
+        0.0034515797160565853
+      ],
+      "sourceSha256": "b915660265db5b60a8f7e4bef201bf5627b409259f5b7d9a9caa8b0767d4e6d3",
+      "outputSha256": "6455de1e0f3974926959981a211076a63af283a0c646c55860b1d5dcbf4f465d",
+      "originalTriangles": 137618,
+      "realtimeTriangles": 27520,
+      "reductionPercent": 80.003,
+      "originalBytes": 1275896,
+      "realtimeBytes": 256896,
+      "originalBounds": {
+        "min": [
+          -0.3921935567069266,
+          0.00008312868373377968,
+          -0.48974609375
+        ],
+        "max": [
+          0.3921350286710475,
+          0.8272166431467058,
+          0.489715576171875
+        ]
+      },
+      "realtimeBounds": {
+        "min": [
+          -0.3921935567069266,
+          0.00008312868373377968,
+          -0.48974609375
+        ],
+        "max": [
+          0.3921350286710475,
+          0.8272166431467058,
+          0.489715576171875
+        ]
+      },
+      "boundsAxisDelta": [
+        0,
+        0,
+        0
+      ],
+      "maxBoundsDeltaPercent": 0,
+      "verified": {
+        "sourceUntouched": true,
+        "uvAttributes": true,
+        "survivingFullVertexAttributeTuplesUnchanged": true,
+        "everyVertexReferenced": true,
+        "boundsFromReferencedIndices": true,
+        "noDuplicateTextures": true,
+        "materialSlots": true,
+        "transforms": true
+      }
+    },
+    {
+      "name": "candles/melted-five-arm-candelabra",
+      "ratio": 0.2,
+      "error": 0.01,
+      "method": "attribute-aware",
+      "parameters": {
+        "normalWeight": 0.25,
+        "uvWeight": 1,
+        "flags": [
+          "Permissive"
+        ]
+      },
+      "measuredErrors": [
+        0.0031640874221920967
+      ],
+      "sourceSha256": "c0686918fb62634efb0359aa5ff57f26ddd00b009d707a8e5f9d14dd2642dc33",
+      "outputSha256": "6b887e7902bfa474c09914e2c9496e4af6ab8aba92fa88883d0fb129ed8ef081",
+      "originalTriangles": 79948,
+      "realtimeTriangles": 15984,
+      "reductionPercent": 80.007,
+      "originalBytes": 1913692,
+      "realtimeBytes": 205696,
+      "originalBounds": {
+        "min": [
+          -0.23481092922098232,
+          -0.32499998807907104,
+          -0.14493926284980208
+        ],
+        "max": [
+          0.23481092922098232,
+          0.32499998807907104,
+          0.14493926284980208
+        ]
+      },
+      "realtimeBounds": {
+        "min": [
+          -0.23481092922098232,
+          -0.32499998807907104,
+          -0.14493926284980208
+        ],
+        "max": [
+          0.23481092922098232,
+          0.32499998807907104,
+          0.14493926284980208
+        ]
+      },
+      "boundsAxisDelta": [
+        0,
+        0,
+        0
+      ],
+      "maxBoundsDeltaPercent": 0,
+      "verified": {
+        "sourceUntouched": true,
+        "uvAttributes": true,
+        "survivingFullVertexAttributeTuplesUnchanged": true,
+        "everyVertexReferenced": true,
+        "boundsFromReferencedIndices": true,
+        "noDuplicateTextures": true,
+        "materialSlots": true,
+        "transforms": true
+      }
+    }
+  ]
+}

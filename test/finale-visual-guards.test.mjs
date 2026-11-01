@@ -103,25 +103,3 @@ test('终局显示器点击命中区沿用唯一坐标源且不再绘制红色 a
   assert.doesNotMatch(target, /auraRef|AdditiveBlending|<pointLight\b/i)
   assert.doesNotMatch(target, /#[a-f\d]{6}/i)
 })
-
-test('显示器以独立 FinalMonitorDisplay 呈现可辨识的终局语义', async () => {
-  const [installation, display] = await Promise.all([
-    source('../src/scene/MonitorInstallation.tsx'),
-    source('../src/scene/FinalMonitorDisplay.tsx'),
-  ])
-
-  assert.match(installation, /import\s+\{\s*FinalMonitorDisplay\s*\}/)
-  assert.match(
-    installation,
-    /finaleReady[\s\S]{0,700}<FinalMonitorDisplay|<FinalMonitorDisplay[\s\S]{0,700}finaleReady/,
-    'the semantic display must be tied to finaleReady',
-  )
-  assert.match(display, /export function FinalMonitorDisplay/)
-
-  assert.match(display, /uniform float uTime/)
-  assert.doesNotMatch(display, /uniform float uFocus|uFocusRef|focused:/)
-  assert.match(display, /float eyeReveal/)
-  assert.match(display, /float relicGlyphs/)
-  assert.match(display, /nameDotMatrix\(\)/)
-  assert.match(display, /raycast=\{ignoreRaycast\}/)
-})

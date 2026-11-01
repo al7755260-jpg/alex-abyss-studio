@@ -3,6 +3,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   type MutableRefObject,
 } from 'react'
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
@@ -16,13 +17,13 @@ import {
 } from 'three'
 import type { StudioAsset } from '../data/studioAssets'
 import { AssetSlot } from './AssetSlot'
+import { ClientLogoHolograms } from './ClientLogoHolograms'
 import {
   easeLampGlowLevel,
-  isLampGlobeRayAllowed,
   LAMP_GLOBE_CENTER,
   LAMP_GLOBE_INTERACTION_RADIUS,
   LAMP_GLOBE_MATERIAL_NAME,
-  LAMP_RELIC_APERTURE_CENTER,
+  LAMP_EMISSION_COLOR,
   LAMP_RELIC_APERTURE_RADIUS,
   LampGlowController,
 } from './lampGlow'
@@ -38,13 +39,6 @@ type InteractiveTentacleLampProps = {
 const lampRaycastSphere = new Sphere()
 const lampRaycastPoint = new Vector3()
 const lampRaycastScale = new Vector3()
-const lampRaycastAperturePoint = new Vector3()
-const lampRaycastApertureOffset = new Vector3(
-  LAMP_RELIC_APERTURE_CENTER[0] - LAMP_GLOBE_CENTER[0],
-  LAMP_RELIC_APERTURE_CENTER[1] - LAMP_GLOBE_CENTER[1],
-  LAMP_RELIC_APERTURE_CENTER[2] - LAMP_GLOBE_CENTER[2],
-)
-
 const lampGlobeRaycast: Mesh['raycast'] = function lampGlobeRaycast(
   this: Mesh,
   raycaster,
@@ -57,19 +51,7 @@ const lampGlobeRaycast: Mesh['raycast'] = function lampGlobeRaycast(
     lampRaycastScale.y,
     lampRaycastScale.z,
   )
-  const globeCenterDistance = Math.sqrt(
-    raycaster.ray.distanceSqToPoint(lampRaycastSphere.center),
-  ) / Math.max(worldScale, 0.0001)
-  lampRaycastAperturePoint.copy(lampRaycastApertureOffset)
-  this.localToWorld(lampRaycastAperturePoint)
-  const apertureDistance = Math.sqrt(
-    raycaster.ray.distanceSqToPoint(lampRaycastAperturePoint),
-  ) / Math.max(worldScale, 0.0001)
-
-  // The small central aperture belongs to drowned-dream-core. Its own proxy
-  // remains the first and only hit there; the surrounding globe toggles light.
-  if (!isLampGlobeRayAllowed(apertureDistance, globeCenterDistance)) return
-
+  // The entire globe toggles its light and the six client projections.
   lampRaycastSphere.radius = LAMP_GLOBE_INTERACTION_RADIUS * worldScale
   const point = raycaster.ray.intersectSphere(lampRaycastSphere, lampRaycastPoint)
   if (!point) return
@@ -109,7 +91,7 @@ function LampGlobeLight({
       <pointLight
         ref={lightRef}
         position={LAMP_GLOBE_CENTER}
-        color="#63f5e9"
+        color={LAMP_EMISSION_COLOR}
         intensity={0}
         distance={2.05}
         decay={2}
@@ -128,6 +110,7 @@ export function InteractiveTentacleLamp({
   const controllerRef = useRef<LampGlowController | null>(null)
   if (!controllerRef.current) controllerRef.current = new LampGlowController()
   const controller = controllerRef.current
+  const [projectionMounted, setProjectionMounted] = useState(false)
   const hoveredRef = useRef(false)
   const globeMaterialsRef = useRef<MeshStandardMaterial[]>([])
   const fittedAsset = useMemo<StudioAsset>(() => ({
@@ -154,7 +137,7 @@ export function InteractiveTentacleLamp({
 
         const globeMaterial = material.clone()
         globeMaterial.name = LAMP_GLOBE_MATERIAL_NAME
-        globeMaterial.emissive.set('#5ef4e8')
+        globeMaterial.emissive.set(LAMP_EMISSION_COLOR)
         globeMaterial.emissiveIntensity = 0
         globeMaterial.needsUpdate = true
         globeMaterials.push(globeMaterial)
@@ -187,6 +170,7 @@ export function InteractiveTentacleLamp({
     event.stopPropagation()
     if (!interactive || event.button !== 0 || event.delta > 8) return
     controller.toggle()
+    setProjectionMounted(true)
     if (reducedMotionRef.current) controller.advance(0, true)
   }, [controller, interactive, reducedMotionRef])
 
@@ -211,6 +195,10 @@ export function InteractiveTentacleLamp({
           globeMaterialsRef={globeMaterialsRef}
           reducedMotionRef={reducedMotionRef}
         />
+        {projectionMounted ? (
+          <ClientLogoHolograms controller={controller} enabled={interactive}
+            reducedMotionRef={reducedMotionRef} />
+        ) : null}
         {interactive ? (
           <mesh
             name={`lamp-globe-interaction-proxy:${asset.id}`}

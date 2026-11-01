@@ -37,51 +37,42 @@ test('书架主体进入奇思档案，同时保留提示球的遗物探索隔�
   assert.doesNotMatch(canvas, /asset\.id === 'forbidden-bookcase'[\s\S]{0,260}onOpenDreamArchive\(\)/)
   assert.match(canvas, /onClick=\{editingLayout \? \(event\) => \{/)
   assert.match(canvas, /event\.button !== 0 \|\| event\.delta > 8/)
-  assert.match(app, /focusDreamArchive\(openDreamArchive\)/)
+  assert.match(app, /window\.location\.assign\(FEATURED_PROJECT_URL\)/)
   assert.match(canvas, /focusDreamArchive: \(onComplete\) => \{/)
-  assert.match(canvas, /label: studioCopy\.dreamArchiveCalloutLabel/)
   assert.match(relics, /event\.stopPropagation\(\)[\s\S]{0,80}onOpenRelic\(relic\.id\)/)
 })
 
-test('灵感书架使用独立鼠标代理打开档案并显示悬停标注', async () => {
+test('灵感书架保留独立鼠标代理和可点击光标', async () => {
   const [app, canvas] = await Promise.all([
     source('src/App.tsx'),
     source('src/scene/StudioCanvas.tsx'),
   ])
 
   assert.match(canvas, /const isDreamArchiveShelf = asset\.id === DREAM_ARCHIVE_SHELF_ASSET_ID/)
-  assert.match(canvas, /const proxyCalloutId = isDreamArchiveShelf[\s\S]{0,100}DREAM_ARCHIVE_SHELF_CALLOUT_ID/)
   assert.match(canvas, /isDreamArchiveShelf \? \(event\) => \{[\s\S]{0,320}onOpenDreamArchive\(\)/)
   assert.match(canvas, /if \(event\.button !== 0 \|\| event\.delta > 8\) return/)
-  assert.match(canvas, /onPointerEnter=\{!editingLayout && \(proxyCalloutId \|\| isVintageTelevision\)/)
-  assert.match(canvas, /if \(proxyCalloutId\) setHoveredCalloutId\(proxyCalloutId\)/)
+  assert.match(canvas, /onPointerEnter=\{!editingLayout && \(isDreamArchiveShelf \|\| isVintageTelevision \|\| isHologramTrigger\)/)
   assert.match(canvas, /enabled=\{editSelected\}/)
   assert.match(app, /onOpenDreamArchive=\{exploreBookcaseDreams\}/)
   assert.doesNotMatch(`${app}\n${canvas}`, /GestureControl|mysteryTargetKind|faceFocused/)
 })
 
-test('梦境档案只由书架模型进入，并保持独立懒加载模态层', async () => {
-  const [app, hud, detail, archive] = await Promise.all([
-    source('src/App.tsx'),
-    source('src/ui/game/GameHUD.tsx'),
-    source('src/ui/game/ArtifactDetailHUD.tsx'),
-    source('src/ui/ideas/DreamArchive.tsx'),
-  ])
-
-  assert.match(app, /lazy\(\(\) => import\('\.\/ui\/ideas\/DreamArchive'\)\)/)
-  assert.match(app, /const \[dreamArchiveOpen, setDreamArchiveOpen\] = useState\(false\)/)
-  assert.match(app, /renderPaused=\{dreamArchiveOpen \|\| grimoireMemoryOpen \|\| televisionTransmissionOpen \|\| mystery\.state\.view\.kind === 'finale'\}/)
-  assert.match(app, /aria-hidden=\{dreamArchiveOpen \|\| grimoireMemoryOpen \|\| televisionTransmissionOpen\}/)
-  assert.match(app, /onOpenDreamArchive=\{exploreBookcaseDreams\}/)
-  assert.equal((app.match(/onOpenDreamArchive=/g) ?? []).length, 1)
-  assert.doesNotMatch(hud, /onOpenDreamArchive|奇思档案|JournalIcon|dream-entry-button/)
-  assert.doesNotMatch(detail, /onOpenDreamArchive|翻开书架里的奇思妙想|dream-entry/)
-  assert.match(archive, /role="dialog"/)
-  assert.match(archive, /aria-modal="true"/)
-  assert.match(archive, /role="tablist"/)
-  assert.match(archive, /role="tabpanel"/)
-  assert.match(archive, /event\.key === 'Escape'/)
-  assert.match(archive, /SAVED_IDEAS_STORAGE_KEY/)
+test('书架直接打开外部作品，编辑模式不跳转', async () => {
+  const app = await source('src/App.tsx')
+  const { FEATURED_PROJECT_URL } = await import('../src/data/portfolioLinks.ts')
+  const body = app.match(/const exploreBookcaseDreams = useCallback\(\(\) => \{([\s\S]*?)\n  \},/)?.[1]
+  assert.ok(body)
+  const navigate = new Function('editingLayout', 'cancelSceneFocus', 'document', 'window', 'FEATURED_PROJECT_URL', body)
+  const visits = []; let cancels = 0
+  const document = { body: { style: { cursor: 'pointer' } } }
+  const window = { location: { assign: (url) => visits.push(url) } }
+  navigate(true, () => cancels++, document, window, FEATURED_PROJECT_URL)
+  assert.equal(visits.length, 0)
+  navigate(false, () => cancels++, document, window, FEATURED_PROJECT_URL)
+  assert.deepEqual(visits, ['https://al7755260-jpg.github.io/tianhou-palace-client-demo/?v=2e05b07'])
+  assert.equal(cancels, 1)
+  assert.equal(document.body.style.cursor, '')
+  assert.doesNotMatch(app, /<DreamArchive|setDreamArchiveOpen|import\('\.\/ui\/ideas\/DreamArchive'\)/)
 })
 
 test('梦境档案保留鼠标操作、键盘后退与焦点循环', async () => {

@@ -21,7 +21,9 @@ test('书房由附件机械开颅人头包围，且头壳不拦截交互射线',
     source('src/scene/RoomShell.tsx'),
   ])
 
-  assert.match(shell, /models\/environment\/alex-mechanical-open-head-optimized\.glb/)
+  assert.match(shell, /import \{ HEAD_PATH \} from '\.\.\/data\/headDelivery'/)
+  const { HEAD_PATH } = await import('../src/data/headDelivery.ts')
+  assert.equal(HEAD_PATH, 'models/environment/alex-mechanical-open-head-optimized.glb')
   assert.match(shell, /new Box3\(\)\.setFromObject\(object\)/)
   assert.match(shell, /child\.castShadow\s*=\s*false/)
   assert.match(shell, /child\.raycast\s*=\s*\(\)\s*=>\s*undefined/)

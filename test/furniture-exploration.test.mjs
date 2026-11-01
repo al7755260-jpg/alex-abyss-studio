@@ -35,10 +35,9 @@ test('六件遗物分别绑定唯一且存在的宿主家具', async () => {
   assert.equal(HIDDEN_RELIC_BY_HOST_ASSET_ID.size, HIDDEN_RELICS.length)
 })
 
-test('六件宿主家具保留独立鼠标代理和悬停标注', async () => {
+test('家具保留编辑选择层和独立鼠标代理', async () => {
   const source = await readFile(projectFile('src/scene/StudioCanvas.tsx'), 'utf8')
 
-  assert.match(source, /HIDDEN_RELIC_BY_HOST_ASSET_ID\.get\(asset\.id\)/)
   assert.match(source, /<Selection>/)
   assert.match(source, /<Select[\s\S]*?name=\{`relic-host:\$\{asset\.id\}`\}/)
   assert.match(source, /enabled=\{editSelected\}/)
@@ -46,9 +45,7 @@ test('六件宿主家具保留独立鼠标代理和悬停标注', async () => {
   assert.match(source, /const interactionProxySize = isDreamArchiveShelf[\s\S]{0,120}: asset\.placeholderSize/)
   assert.match(source, /<boxGeometry args=\{interactionProxySize\} \/>/)
   assert.match(source, /<meshBasicMaterial[\s\S]{0,100}visible=\{false\}/)
-  assert.match(source, /const proxyCalloutId = isDreamArchiveShelf[\s\S]{0,120}hostRelic\?\.id \?\? null/)
-  assert.match(source, /onPointerEnter=\{!editingLayout && \(proxyCalloutId \|\| isVintageTelevision\)/)
-  assert.match(source, /if \(proxyCalloutId\) setHoveredCalloutId\(proxyCalloutId\)/)
+  assert.match(source, /onPointerEnter=\{!editingLayout && \(isDreamArchiveShelf \|\| isVintageTelevision \|\| isHologramTrigger\)/)
   assert.doesNotMatch(source, /mysteryTargetKind|interactionTargetsRef|faceFocused/)
 })
 
@@ -79,12 +76,12 @@ test('家具选择层包住完整安装组件，统一轮廓高亮不遗漏机�
   assert.match(effects, /pulseSpeed=\{0\.72\}/)
 })
 
-test('退出遗物详情后会恢复家具鼠标代理射线', async () => {
+test('编辑相册时恢复家具鼠标代理射线', async () => {
   const source = await readFile(projectFile('src/scene/StudioCanvas.tsx'), 'utf8')
 
   assert.match(
     source,
-    /raycast=\{[\s\S]{0,100}detailRelic \|\| \(isInteractiveGrimoire && !editingLayout\)[\s\S]{0,100}\? ignoreStudioProxyRaycast[\s\S]{0,80}: Mesh\.prototype\.raycast/,
+    /raycast=\{[\s\S]{0,100}isInteractiveGrimoire && !editingLayout[\s\S]{0,100}\? ignoreStudioProxyRaycast[\s\S]{0,80}: Mesh\.prototype\.raycast/,
   )
   assert.doesNotMatch(source, /mysteryTargetToken|focusedTargetRef|lastTargetKeyRef/)
 
@@ -98,15 +95,10 @@ test('退出遗物详情后会恢复家具鼠标代理射线', async () => {
   assert.equal(proxy.raycast, originalRaycast)
 })
 
-test('提示小圆点保留鼠标点击与悬停探索', async () => {
-  const source = await readFile(projectFile('src/scene/HiddenRelics.tsx'), 'utf8')
-
-  assert.match(source, /const hitPosition = hitPositions\?\.get\(relic\.id\) \?\? relic\.hitPosition/)
-  assert.match(source, /position=\{hitPosition\}/)
-  assert.match(source, /raycast=\{pointerEnabled \? relicProxyRaycast : ignoreRaycast\}/)
-  assert.match(source, /onClick=\{pointerEnabled \? \(event\) =>/)
-  assert.match(source, /onPointerEnter=\{pointerEnabled \? \(event\) =>/)
-  assert.match(source, /event\.delta <= 10/)
-  assert.match(source, /onOpenRelic\(relic\.id\)/)
-  assert.doesNotMatch(source, /mysteryTargetKind|mysteryTargetId|focusRaycastIgnore/)
+test('场景兴趣点已移除，物体自身发光组件继续挂载', async () => {
+  const source = await readFile(projectFile('src/scene/StudioCanvas.tsx'), 'utf8')
+  assert.doesNotMatch(source, /SceneAccentLights|<HiddenRelics/)
+  for (const component of ['CandleSet', 'CandelabraInstallation', 'MechanicalOctopusInstallation', 'CthulhuMaskInstallation', 'InteractiveTentacleLamp']) {
+    assert.ok(source.includes(`<${component}`))
+  }
 })

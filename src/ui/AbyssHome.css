@@ -1,0 +1,329 @@
+/* Portfolio-only composition. Keep editor controls and text transforms intact. */
+.viewer:has(.abyss-home) {
+  --home-poster: url('/images/abyss-home.webp');
+  background-color: #041418;
+  background-image:
+    linear-gradient(180deg, rgb(1 11 15 / 24%), rgb(1 9 12 / 20%) 45%, rgb(1 8 11 / 40%)),
+    var(--home-poster);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+@media (max-width: 720px) {
+  .viewer:has(.abyss-home) { --home-poster: url('/images/abyss-home-mobile.webp'); }
+}
+
+.viewer:has(.abyss-home)::before { opacity: 0.3; }
+.viewer:has(.abyss-home)::after {
+  background: linear-gradient(180deg, transparent 65%, rgb(1 8 10 / 45%));
+}
+
+.viewer:has(.abyss-home) .viewer__canvas { inset: 0; }
+
+.abyss-home.game-ui { color: #c8c6aa; pointer-events: none; }
+.abyss-home .game-topbar {
+  inset: clamp(36px, 5.6vh, 66px) 5.4% auto 6.2%;
+  align-items: flex-start;
+}
+
+.abyss-home .abyss-home__brand {
+  position: relative;
+  display: block;
+  width: min(410px, 52vw);
+  pointer-events: none;
+}
+
+.abyss-home .brand__mark {
+  position: absolute;
+  top: 1px;
+  left: -29px;
+  width: 23px;
+  height: 23px;
+  color: #6b8c84;
+  opacity: 0.72;
+  filter: none;
+  pointer-events: none;
+}
+
+.abyss-home .brand h1 {
+  margin: 0;
+  font-family: 'STZhongsong', 'Noto Serif CJK SC', 'Source Han Serif SC', 'SimSun', serif;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: 0;
+}
+
+.abyss-home__byline {
+  display: block;
+  margin: 0 0 8px 3px;
+  color: #c6c7b5;
+  font-family: Georgia, 'Times New Roman', 'SimSun', serif;
+  font-size: clamp(23px, 2.85vw, 32px);
+  font-weight: 400;
+  letter-spacing: 0.075em;
+  text-shadow: 0 2px 3px #061418;
+}
+
+.abyss-home__title {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  color: #cbc9a8;
+  background: linear-gradient(173deg, #edf0cf 0%, #c2c9ac 19%, #8d9f91 40%, #4c6965 48%, #bfbea1 53%, #c5c6ad 66%, #667a72 86%, #adbaa4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 0.45px rgb(200 212 185 / 38%);
+  font-size: clamp(52px, 7.1vw, 83px);
+  font-weight: 900;
+  line-height: 1.12;
+  letter-spacing: 0.07em;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+  filter: drop-shadow(0 2px 0 #324a47) drop-shadow(1px 4px 0 #0d282b) drop-shadow(0 7px 9px rgb(0 0 0 / 65%));
+}
+
+.abyss-home__title-rule {
+  position: relative;
+  height: 1px;
+  width: min(94%, 342px);
+  margin: 19px 0 0 2px;
+  background: linear-gradient(90deg, #82978b, rgb(130 151 139 / 42%) 60%, transparent);
+}
+
+.abyss-home__title-rule::before,
+.abyss-home__title-rule i,
+.abyss-home__motto-rule i {
+  position: absolute;
+  top: -3px;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  border: 1px solid #7b9688;
+  background: #0b2529;
+  transform: rotate(45deg);
+  content: '';
+}
+
+.abyss-home__title-rule i { left: 13px; width: 5px; height: 5px; top: -2px; }
+.abyss-home .brand .abyss-home__subtitle {
+  margin: 15px 0 0 5px;
+  color: #b9c3af;
+  font-family: 'STZhongsong', 'Noto Serif CJK SC', 'SimSun', serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0.25em;
+  text-transform: none;
+  text-shadow: 0 2px 5px #031115;
+}
+
+.abyss-home .game-topbar__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 19px;
+  padding-top: 3px;
+  pointer-events: none;
+}
+
+.abyss-home .studio-editor { pointer-events: none; }
+.abyss-home .studio-editor__panel { pointer-events: auto; }
+.abyss-home .game-topbar__actions .reset-button,
+.abyss-home .game-topbar__actions .studio-editor__toggle {
+  position: relative;
+  display: grid;
+  grid-template-columns: 54px auto;
+  align-items: center;
+  justify-content: start;
+  gap: 13px;
+  min-width: 154px;
+  width: auto;
+  height: 54px;
+  min-height: 54px;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  color: #d2d3ba;
+  background: transparent;
+  font-family: 'STZhongsong', 'SimSun', serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: 0.15em;
+  text-shadow: 0 2px 5px #020b0d;
+  text-align: left;
+  pointer-events: auto;
+  transition: color 160ms ease, filter 160ms ease;
+}
+
+.abyss-home .game-topbar__actions .reset-button::before,
+.abyss-home .game-topbar__actions .studio-editor__toggle::before {
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 54px;
+  height: 54px;
+  border: 1px solid #687d70;
+  border-radius: 50%;
+  background: radial-gradient(circle at 42% 30%, #273e3c, #0a2024 54%, #051115 74%);
+  box-shadow: inset 0 0 0 4px #0b2024, inset 0 0 0 5px #50675d, 0 4px 10px rgb(0 0 0 / 36%);
+  content: '';
+  pointer-events: none;
+}
+
+.abyss-home .game-topbar__actions .reset-button::after,
+.abyss-home .game-topbar__actions .studio-editor__toggle::after {
+  position: absolute;
+  inset: 8px auto auto 8px;
+  width: 38px;
+  height: 38px;
+  border: 1px dashed rgb(164 181 146 / 44%);
+  border-radius: 50%;
+  content: '';
+  pointer-events: none;
+}
+
+.abyss-home .game-topbar__actions .reset-button svg,
+.abyss-home .game-topbar__actions .studio-editor__toggle svg {
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  width: 24px;
+  height: 24px;
+  color: #c0ccb1;
+  filter: drop-shadow(0 0 5px rgb(143 194 170 / 20%));
+}
+
+.abyss-home .game-topbar__actions .reset-button:hover,
+.abyss-home .game-topbar__actions .studio-editor__toggle:hover {
+  color: #edf3d3;
+  filter: brightness(1.2);
+  transform: none;
+}
+
+.abyss-home .game-topbar__actions button:focus-visible { outline: 1px solid #aec7a8; outline-offset: 6px; }
+.abyss-home .studio-editor__panel {
+  top: 126px;
+  right: 5.4%;
+  max-height: calc(100dvh - 152px);
+}
+.abyss-home:has(.studio-editor--enabled) .reset-button { visibility: hidden; pointer-events: none; }
+
+.abyss-home__motto {
+  position: absolute;
+  right: 5.5%;
+  bottom: 22%;
+  width: max-content;
+  max-width: 27%;
+  color: #aabfae;
+  font-family: 'STZhongsong', 'Noto Serif CJK SC', 'SimSun', serif;
+  text-align: center;
+  text-shadow: 0 2px 4px #031215, 0 0 16px rgb(117 170 148 / 13%);
+  pointer-events: none;
+}
+
+.abyss-home__motto-rule {
+  position: relative;
+  height: 1px;
+  width: 82%;
+  margin: 0 auto 20px;
+  background: linear-gradient(90deg, transparent, #6d9081 40%, #6d9081 60%, transparent);
+}
+.abyss-home__motto-rule i { left: calc(50% - 3px); }
+.abyss-home__motto p { margin: 0; font-size: clamp(17px, 2.2vw, 25px); line-height: 1.9; letter-spacing: 0.15em; }
+.abyss-home__motto span, .abyss-home__motto strong { display: block; font-weight: 400; }
+.abyss-home__motto strong { color: #d2d9b8; font-size: 1.12em; letter-spacing: 0.19em; }
+.abyss-home:has(.studio-editor--enabled) .abyss-home__motto { opacity: 0.2; }
+
+.abyss-home .abyss-home__controls {
+  right: auto;
+  bottom: max(25px, 4.3vh);
+  left: 50%;
+  display: flex;
+  width: max-content;
+  gap: 23px;
+  color: #97afa0;
+  font-family: 'STZhongsong', 'SimSun', serif;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-shadow: 0 2px 5px #020e11;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.abyss-home .abyss-home__controls .abyss-home__control {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.abyss-home .abyss-home__controls .studio-text-layer { display: inline-block; }
+.abyss-home.game-ui .abyss-home__controls > i {
+  display: block;
+  width: 1px;
+  height: 15px;
+  background: rgb(129 163 145 / 35%);
+}
+.abyss-home__control svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: #92b3a2;
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.abyss-home .studio-text-layer--editing { pointer-events: auto; }
+
+@media (min-aspect-ratio: 3/2) {
+  .viewer:has(.abyss-home) .viewer__canvas { inset: 0; }
+  .abyss-home .game-topbar { top: 6%; }
+  .abyss-home__motto { bottom: 23%; right: 6.3%; }
+}
+
+@media (max-width: 720px) {
+  .viewer:has(.abyss-home) .viewer__canvas { inset: 0; }
+  .abyss-home .game-topbar { inset: 29px 20px auto 26px; }
+  .abyss-home .abyss-home__brand { width: calc(100vw - 110px); }
+  .abyss-home .brand__mark { display: none; }
+  .abyss-home__byline { font-size: 19px; margin: 0 0 7px 1px; }
+  .abyss-home__title { font-size: clamp(34px, 8.6vw, 58px); letter-spacing: 0.06em; }
+  .abyss-home__title-rule { width: 85%; margin-top: 14px; }
+  .abyss-home .brand .abyss-home__subtitle { margin-top: 12px; font-size: 11px; }
+  .abyss-home .game-topbar__actions { gap: 12px; padding-top: 0; }
+  .abyss-home .game-topbar__actions .reset-button,
+  .abyss-home .game-topbar__actions .studio-editor__toggle {
+    grid-template-columns: 46px;
+    min-width: 46px;
+    width: 46px;
+    height: 46px;
+    min-height: 46px;
+    gap: 0;
+    font-size: 0;
+    line-height: 0;
+    letter-spacing: 0;
+  }
+  .abyss-home .game-topbar__actions .reset-button::before,
+  .abyss-home .game-topbar__actions .studio-editor__toggle::before { width: 46px; height: 46px; }
+  .abyss-home .game-topbar__actions .reset-button::after,
+  .abyss-home .game-topbar__actions .studio-editor__toggle::after { width: 30px; height: 30px; }
+  .abyss-home .game-topbar__actions .reset-button svg,
+  .abyss-home .game-topbar__actions .studio-editor__toggle svg { width: 21px; height: 21px; }
+  .abyss-home__motto { right: 22px; bottom: 15%; max-width: 48%; }
+  .abyss-home__motto p { font-size: 15px; line-height: 1.8; letter-spacing: 0.1em; }
+  .abyss-home__motto-rule { margin-bottom: 12px; }
+  .abyss-home .abyss-home__controls { bottom: max(23px, env(safe-area-inset-bottom)); gap: 18px; font-size: 10px; }
+  .abyss-home .abyss-home__controls .abyss-home__control { gap: 6px; }
+  .abyss-home__control svg { width: 16px; height: 16px; }
+  .abyss-home .studio-editor__panel { top: 88px; right: 16px; max-height: calc(100dvh - 112px); }
+}
+
+@media (max-height: 520px) and (min-width: 721px) {
+  .abyss-home .game-topbar { top: 22px; }
+  .abyss-home__byline { font-size: 19px; }
+  .abyss-home__title { font-size: 45px; }
+  .abyss-home__title-rule { margin-top: 12px; }
+  .abyss-home .brand .abyss-home__subtitle { font-size: 11px; margin-top: 10px; }
+  .abyss-home .game-topbar__actions { gap: 9px; }
+  .abyss-home__motto p { font-size: 17px; }
+  .abyss-home .abyss-home__controls { bottom: 18px; }
+}

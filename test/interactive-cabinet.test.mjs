@@ -77,32 +77,14 @@ test('StudioCanvas 为 cabinet 使用唯一的鼠标开合代理', async () => {
 
   assert.match(canvas, /const isInteractiveCabinet = asset\.kind === 'cabinet'/)
   assert.match(canvas, /asset\.kind === 'cabinet'[\s\S]{0,120}<InteractiveCabinet/)
-  assert.match(canvas, /onDoorOpenChange=\{setCabinetDoorOpen\}/)
   assert.match(
     canvas,
-    /\{\(\s*!isInteractiveCabinet\s*&&\s*!isInteractiveChair\s*&&\s*!isInteractiveLamp\s*\)\s*\|\|\s*editingLayout\s*\?\s*\(/,
+    /\{\(\s*!isInteractiveCabinet\s*&&\s*!isInteractiveChair\s*&&\s*!isInteractiveLamp\s*&&\s*!isInteractivePlaque\s*\)\s*\|\|\s*editingLayout\s*\?\s*\(/,
   )
   assert.doesNotMatch(canvas, /getInteractionTargetRef|mysteryTargetKind|mysteryTargetId/)
 })
 
-test('柜门打开后指纹匣启用独立鼠标入口', async () => {
-  const [relics, cabinet, canvas] = await Promise.all([
-    source('../src/scene/HiddenRelics.tsx'),
-    source('../src/scene/InteractiveCabinet.tsx'),
-    source('../src/scene/StudioCanvas.tsx'),
-  ])
 
-  assert.match(relics, /const isFingerprintCasket = relic\.id === 'fingerprint-casket'/)
-  assert.match(relics, /const pointerEnabled = !isFingerprintCasket \|\| fingerprintCasketAccessible/)
-  assert.match(relics, /raycast=\{pointerEnabled \? relicProxyRaycast : ignoreRaycast\}/)
-  assert.match(relics, /onClick=\{pointerEnabled \? \(event\) =>/)
-  assert.match(relics, /onPointerEnter=\{pointerEnabled \? \(event\) =>/)
-  assert.match(relics, /onPointerLeave=\{pointerEnabled \? \(event\) =>/)
-  assert.match(cabinet, /if \(!controller\.toggle\(\)\) return/)
-  assert.match(cabinet, /onDoorOpenChange\?\.\(playback\.open\)/)
-  assert.match(canvas, /const \[cabinetDoorOpen, setCabinetDoorOpen\] = useState\(false\)/)
-  assert.match(canvas, /fingerprintCasketAccessible=\{cabinetDoorOpen\}/)
-})
 
 test('发布柜子 GLB 保留双门节点、闭合初始姿态和 1.3 秒开门动画', async () => {
   await MeshoptDecoder.ready

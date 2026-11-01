@@ -10,7 +10,8 @@ const source = (relativePath) => readFile(
 test('编辑模式通过统一根组提供单一移动、旋转或等比缩放操纵器', async () => {
   const canvas = await source('../src/scene/StudioCanvas.tsx')
 
-  assert.match(canvas, /import \{ AdaptiveDpr, OrbitControls, TransformControls, useProgress \}/)
+  assert.match(canvas, /import \{ OrbitControls, TransformControls, useProgress \}/)
+  assert.match(canvas, /<AdaptiveRenderBudget \/>/)
   assert.equal((canvas.match(/<TransformControls\b/g) ?? []).length, 1)
   assert.match(canvas, /name=\{`editable-asset:\$\{asset\.id\}`\}/)
   assert.match(canvas, /position=\{transform\.position\}/)
@@ -47,33 +48,20 @@ test('五臂烛台进入统一可编辑资产根组，模型、火焰和灯光�
   assert.match(candles, /baseIntensity: 3\.25/)
 })
 
-test('编辑模式暂停鼠标探索，退出后仍保留原探索组件', async () => {
-  const [app, canvas] = await Promise.all([
-    source('../src/App.tsx'),
-    source('../src/scene/StudioCanvas.tsx'),
-  ])
-
-  assert.match(app, /const requestOpenRelic = useCallback[\s\S]{0,120}if \(editingLayout\) return/)
-  assert.match(app, /const exploreBookcaseDreams = useCallback[\s\S]{0,120}if \(editingLayout \|\| dreamArchiveOpen/)
-  assert.match(canvas, /\{!detailRelic && !editingLayout \? \([\s\S]{0,220}<HiddenRelics/)
+test('编辑模式暂停作品入口，场景不再渲染兴趣点', async () => {
+  const [app, canvas] = await Promise.all([source('../src/App.tsx'), source('../src/scene/StudioCanvas.tsx')])
+  assert.match(app, /const exploreBookcaseDreams = useCallback[\s\S]{0,120}if \(editingLayout\) return/)
+  assert.doesNotMatch(canvas, /SceneAccentLights/)
   assert.match(canvas, /onPointerMissed=\{\(\) => \{[\s\S]{0,80}onSelectAsset\(null\)/)
-  assert.doesNotMatch(`${app}\n${canvas}`, /GestureControl|SceneFocusDriver|beginCameraGesture/)
 })
 
-test('移动家具后遗物提示、推进镜头和终局命中区共用附着点换算', async () => {
-  const [canvas, relics] = await Promise.all([
-    source('../src/scene/StudioCanvas.tsx'),
-    source('../src/scene/HiddenRelics.tsx'),
-  ])
 
-  assert.match(canvas, /HIDDEN_RELICS\.map\(\(relic\) => \{/)
-  assert.ok((canvas.match(/resolveAttachedPoint\(/g) ?? []).length >= 3)
-  assert.match(canvas, /hitPositions=\{resolvedRelicHitPositions\}/)
-  assert.match(canvas, /position=\{finalMonitorPosition\}/)
-  assert.match(canvas, /toTarget: new Vector3\(\.\.\.resolvedHitPosition\)/)
-  assert.match(relics, /hitPositions\?: ReadonlyMap<HiddenRelicId, Vector3Tuple>/)
-  assert.match(relics, /position = FINAL_MONITOR_TARGET\.position/)
+test('移动作品书架后镜头使用附着点换算', async () => {
+  const canvas = await source('../src/scene/StudioCanvas.tsx')
+  assert.match(canvas, /const resolvedTarget = resolveAttachedPoint\(\s*defaultTransform,\s*currentTransform,\s*DREAM_ARCHIVE_SHELF_DEFAULT_ANCHOR,/)
+  assert.match(canvas, /toTarget: new Vector3\(\.\.\.resolvedTarget\)/)
 })
+
 
 test('编辑器提供选择、移动旋转缩放和自动保存，但不再暴露归位入口', async () => {
   const [control, styles] = await Promise.all([
@@ -133,7 +121,7 @@ test('光照页签统一调节场景灯、环境光与曝光并独立自动保�
   assert.match(canvas, /StudioLightingSettingsProvider settings=\{studioLighting\}/)
   assert.match(canvas, /<RendererExposureController \/>/)
   assert.match(lighting, /gl\.toneMappingExposure = exposure/)
-  assert.match(lighting, /intensity=\{0\.42 \* globalIntensity \* ambientIntensity\}/)
+  assert.match(lighting, /intensity=\{0\.12 \* globalIntensity \* ambientIntensity\}/)
   assert.match(lighting, /faceCandleIntensity\(time\) \* globalIntensity/)
   assert.match(candles, /descriptor\.baseIntensity \* \(1 \+ flicker\) \* globalIntensity/)
   assert.match(mask, /Math\.max\(0\.28, \(slowPulse - briefDip\) \* 0\.78\)[\s\S]{0,60}\* globalIntensity/)
@@ -152,25 +140,23 @@ test('文字页签可编辑内容并独立选择、变换和保存每个文字�
     sanity,
     archive,
     canvas,
-    callout,
     textLayer,
     textLayout,
     styles,
   ] = await Promise.all([
     source('../src/App.tsx'),
     source('../src/ui/editor/StudioEditorControl.tsx'),
-    source('../src/ui/game/GameHUD.tsx'),
+    source('../src/ui/StudioHUD.tsx'),
     source('../src/ui/game/CurrentObjective.tsx'),
     source('../src/ui/game/SanityMeter.tsx'),
     source('../src/ui/game/RelicArchiveBar.tsx'),
     source('../src/scene/StudioCanvas.tsx'),
-    source('../src/scene/ObjectCalloutOverlay.tsx'),
     source('../src/ui/editor/StudioTextLayer.tsx'),
     source('../src/editor/studioTextLayout.ts'),
     source('../src/styles.css'),
   ])
 
-  for (const label of ['布局', '文字', '主标题', '副标题', '未完成标题', '未完成说明', '理智仪表名称', '旋转提示', '缩放提示', '探索提示', '恢复默认文字', '立即保存']) {
+  for (const label of ['布局', '文字', '主标题', '副标题', '旋转提示', '缩放提示', '探索提示', '恢复默认文字', '立即保存']) {
     assert.match(control, new RegExp(label))
   }
   assert.match(control, /value=\{copy\[field\]\}/)
@@ -236,23 +222,20 @@ test('文字页签可编辑内容并独立选择、变换和保存每个文字�
   assert.match(textLayer, /onSelect\(layerId\)/)
   assert.match(textLayer, /onCommit\(layerId, drag\.next\)/)
 
-  assert.match(hud, /<StudioTextLayer layerId="brandTitle">\{copy\.brandTitle\}<\/StudioTextLayer>/)
+  assert.match(hud, /const titleParts = copy\.brandTitle\.match\(/)
+  assert.match(hud, /<StudioTextLayer layerId="brandTitle">[\s\S]{0,180}\{titleParts\[1\]\}[\s\S]{0,160}\{titleParts\?\.\[2\] \?\? copy\.brandTitle\}[\s\S]{0,80}<\/StudioTextLayer>/)
   assert.match(hud, /<StudioTextLayer layerId="brandSubtitle">\{copy\.brandSubtitle\}<\/StudioTextLayer>/)
-  assert.match(hud, /<StudioTextLayer layerId=\{state\.view\.kind === 'relic' \? 'backToStudioLabel' : 'resetCameraLabel'\}>/)
+  assert.match(hud, /<StudioTextLayer layerId="resetCameraLabel">/)
   assert.match(hud, /<StudioTextLayer layerId="rotateHint">\{copy\.rotateHint\}<\/StudioTextLayer>/)
   assert.match(hud, /<StudioTextLayer layerId="zoomHint">\{copy\.zoomHint\}<\/StudioTextLayer>/)
-  assert.match(hud, /<StudioTextLayer layerId="exploreHint">\{copy\.exploreHint\}<\/StudioTextLayer>/)
+  assert.match(hud, /className="game-controls abyss-home__controls" aria-label="三维查看操作说明"/)
   assert.match(objective, /<StudioTextLayer layerId="objectiveLabel">\{copy\.objectiveLabel\}<\/StudioTextLayer>/)
   assert.match(objective, /layerId=\{complete \? 'objectiveCompleteTitle' : 'objectivePendingTitle'\}/)
   assert.match(objective, /layerId=\{complete \? 'objectiveCompleteDescription' : 'objectivePendingDescription'\}/)
   assert.match(sanity, /<StudioTextLayer layerId="sanityLabel">\{label\}<\/StudioTextLayer>/)
   assert.match(archive, /<StudioTextLayer layerId="undiscoveredRelicLabel">\{undiscoveredLabel\}<\/StudioTextLayer>/)
-  assert.match(callout, /<StudioTextLayer layerId=\{displayedTarget\.textLayerId\}>/)
-  assert.match(canvas, /textLayerId: `asset-label:\$\{relic\.hostAssetId\}`/)
-  assert.match(canvas, /textLayerId: 'terminalCalloutLabel'/)
-  assert.match(canvas, /textLayerId: 'dreamArchiveCalloutLabel'/)
-  assert.match(canvas, /label: studioCopy\.terminalCalloutLabel/)
-  assert.match(canvas, /studioCopy\.assetLabels\[relic\.hostAssetId\]/)
+  assert.doesNotMatch(canvas, /textLayerId: 'terminalCalloutLabel'/)
+  assert.doesNotMatch(canvas, /label: studioCopy\.terminalCalloutLabel/)
   assert.match(styles, /\.studio-editor__tabs/)
   assert.match(styles, /\.studio-editor__copy-field input/)
   assert.match(styles, /\.viewer--editing-copy/)
@@ -340,7 +323,7 @@ test('布局改动会自动持久化，离页前补存且镜头归中不接触�
   const [app, canvas, hud] = await Promise.all([
     source('../src/App.tsx'),
     source('../src/scene/StudioCanvas.tsx'),
-    source('../src/ui/game/GameHUD.tsx'),
+    source('../src/ui/StudioHUD.tsx'),
   ])
 
   assert.match(app, /const persistLayoutSnapshot = useCallback/)
@@ -351,17 +334,16 @@ test('布局改动会自动持久化，离页前补存且镜头归中不接触�
   assert.match(app, /return \(\) => window\.clearTimeout\(saveTimer\)/)
   assert.match(app, /window\.addEventListener\('pagehide', saveLatestLayout\)/)
   assert.match(app, /if \(latestLayoutDirtyRef\.current\)[\s\S]{0,120}persistLayoutSnapshot\(latestLayoutRef\.current\)/)
-  assert.match(app, /if \(editingLayout && layoutDirty\) saveLayout\(\)/)
   assert.doesNotMatch(app, /resetSelectedAsset|resetAllAssets|type: 'reset-selected'|type: 'reset-all'/)
 
   const appResetStart = app.indexOf('const resetCamera = useCallback')
-  const appResetEnd = app.indexOf('const openDreamArchive', appResetStart)
+  const appResetEnd = app.indexOf('const exploreBookcaseDreams', appResetStart)
   const appResetBlock = app.slice(appResetStart, appResetEnd)
   assert.match(appResetBlock, /studioRef\.current\?\.resetCamera\(\)/)
   assert.doesNotMatch(appResetBlock, /dispatchEditor|saveStudioLayout|DEFAULT_STUDIO_LAYOUT|setEditingLayout/)
 
   const canvasResetStart = canvas.indexOf('resetCamera: () => {')
-  const canvasResetEnd = canvas.indexOf('focusRelic:', canvasResetStart)
+  const canvasResetEnd = canvas.indexOf('focusDreamArchive:', canvasResetStart)
   const canvasResetBlock = canvas.slice(canvasResetStart, canvasResetEnd)
   assert.doesNotMatch(canvasResetBlock, /onAssetTransformChange|studioLayout|defaultStudioLayout/)
 

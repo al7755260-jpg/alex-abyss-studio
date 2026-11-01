@@ -1,4 +1,4 @@
-import { Euler, Matrix4, Quaternion, Vector3 } from 'three'
+export { resolveAttachedPoint } from './resolveAttachedPoint.ts'
 
 export const STUDIO_LAYOUT_STORAGE_KEY = 'alex-abyss-studio:layout:v2'
 export const STUDIO_LAYOUT_LEGACY_STORAGE_KEY = 'alex-abyss-studio:layout:v1'
@@ -51,7 +51,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-function isFiniteVector3(value: unknown): value is StudioVector3 {
+export function isFiniteVector3(value: unknown): value is StudioVector3 {
   return Array.isArray(value)
     && value.length === 3
     && value.every((component) => typeof component === 'number' && Number.isFinite(component))
@@ -70,7 +70,7 @@ export function clampStudioScale(value: number) {
   return Math.min(STUDIO_SCALE_MAX, Math.max(STUDIO_SCALE_MIN, value))
 }
 
-function isStudioTransform(value: unknown): value is StudioTransform {
+export function isStudioTransform(value: unknown): value is StudioTransform {
   return isRecord(value)
     && isFiniteVector3(value.position)
     && isFiniteVector3(value.rotation)
@@ -245,46 +245,6 @@ export function layoutsEqual(left: StudioLayout, right: StudioLayout): boolean {
     const rightTransform = right[id]
     return rightTransform !== undefined && transformEquals(leftTransform, rightTransform)
   })
-}
-
-/**
- * Keeps a point attached to an asset after its transform changes. The point is
- * first moved from world space into the asset's default local space, then back
- * to world space through the current transform.
- */
-export function resolveAttachedPoint(
-  defaultTransform: StudioTransform,
-  currentTransform: StudioTransform,
-  worldPoint: readonly [number, number, number],
-): StudioVector3 {
-  if (
-    !isStudioTransform(defaultTransform)
-    || !isStudioTransform(currentTransform)
-    || !isFiniteVector3(worldPoint)
-  ) {
-    throw new TypeError('Attached points and transforms must use finite three-number tuples')
-  }
-
-  const normalizedDefault = normalizeTransform(defaultTransform)
-  const normalizedCurrent = normalizeTransform(currentTransform)
-  if (!normalizedDefault || !normalizedCurrent) {
-    throw new TypeError('Attached points and transforms must use finite three-number tuples')
-  }
-  const defaultMatrix = new Matrix4().compose(
-    new Vector3(...normalizedDefault.position),
-    new Quaternion().setFromEuler(new Euler(...normalizedDefault.rotation, 'XYZ')),
-    new Vector3(...normalizedDefault.scale),
-  )
-  const currentMatrix = new Matrix4().compose(
-    new Vector3(...normalizedCurrent.position),
-    new Quaternion().setFromEuler(new Euler(...normalizedCurrent.rotation, 'XYZ')),
-    new Vector3(...normalizedCurrent.scale),
-  )
-  const resolved = new Vector3(...worldPoint)
-    .applyMatrix4(defaultMatrix.invert())
-    .applyMatrix4(currentMatrix)
-
-  return [resolved.x, resolved.y, resolved.z]
 }
 
 export function createStudioEditorState(

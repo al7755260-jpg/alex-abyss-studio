@@ -135,7 +135,7 @@ function harness({ isDevelopment = true, browserClean = false, browserFailure = 
     setSavedStudioLighting: (value) => { state.savedLighting = value },
     setEditorSection: (value) => { state.section = value },
     setEditingLayout: (value) => { state.editing = value },
-    cancelRelicOpening: () => { state.cancelCount += 1 },
+    cancelSceneFocus: () => { state.cancelCount += 1 },
     dispatchEditor, dispatchTextEditor,
     layoutsEqual, studioCopiesEqual, studioTextLayoutsEqual, studioLightingEqual,
     loadPersistenceClient: async () => {

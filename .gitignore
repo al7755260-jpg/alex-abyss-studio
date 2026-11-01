@@ -22,6 +22,11 @@ packaging/
 # Local QA captures are not needed by the runtime deployment.
 /qa-*.png
 
+# Local source export notes and the full-resolution authoring reference.
+/SOURCE_FILES.sha256
+/导出说明.md
+/public/images/abyss-home-source.png
+
 # Automatic local-editor saves and their atomic staging files stay on this PC.
 .local-scene-backups/
 /src/data/.publishedScene.local-save-*.tmp

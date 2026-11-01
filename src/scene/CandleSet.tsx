@@ -28,6 +28,7 @@ import { DESK_DEVICE_BASE_Y } from '../data/deskSupport'
 import type { StudioAsset } from '../data/studioAssets'
 import { AssetSlot } from './AssetSlot'
 import { useStudioLightingSettings } from './StudioLightingSettingsContext'
+import { useSmallPropLod } from './useSmallPropLod'
 
 type Vector3Tuple = [number, number, number]
 
@@ -313,6 +314,11 @@ function CandleModel({
       offset: [-center.x, -bounds.min.y, -center.z] as Vector3Tuple,
     }
   }, [placement, source])
+
+  useSmallPropLod(
+    prepared.object,
+    CANDLE_MODEL_URLS[placement.kind].replace('-optimized.glb', '-realtime.glb'),
+  )
 
   return (
     <group

@@ -1,12 +1,10 @@
 import {
   forwardRef,
-  lazy,
   memo,
   Suspense,
   useCallback,
   useEffect,
   useImperativeHandle,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -16,7 +14,7 @@ import {
 } from 'react'
 import { Canvas, events, useFrame, type RootStore } from '@react-three/fiber'
 import { useThree } from '@react-three/fiber'
-import { AdaptiveDpr, OrbitControls, TransformControls, useProgress } from '@react-three/drei'
+import { OrbitControls, TransformControls, useProgress } from '@react-three/drei'
 import { Select, Selection } from '@react-three/postprocessing'
 import {
   ACESFilmicToneMapping,
@@ -30,13 +28,6 @@ import {
   SRGBColorSpace,
   Vector3,
 } from 'three'
-import {
-  FINAL_MONITOR_TARGET,
-  HIDDEN_RELIC_BY_HOST_ASSET_ID,
-  HIDDEN_RELIC_BY_ID,
-  HIDDEN_RELICS,
-  type HiddenRelicId,
-} from '../data/hiddenRelics'
 import {
   LOVECRAFT_PARTICLE_BUST_ASSET_ID,
   STUDIO_ASSETS,
@@ -56,14 +47,11 @@ import {
 import type { StudioCopy } from '../editor/studioCopy'
 import type { StudioLightingSettings } from '../editor/studioLighting'
 import type { StudioTextLayout } from '../editor/studioTextLayout'
-import type { MysteryView } from '../game/mysteryState'
 import { StudioTextLayerProvider } from '../ui/editor/StudioTextLayer'
 import { AssetSlot } from './AssetSlot'
-import {
-  DETAIL_CENTER,
-  DETAIL_INITIAL_CAMERA_DISTANCE,
-  DETAIL_MIN_CAMERA_DISTANCE,
-} from './artifactDetailLayout'
+import { AlexHologramProjection } from './AlexHologramProjection'
+import { clearHologramDisplay, finishHologramExit, INITIAL_HOLOGRAM_DISPLAY, toggleHologramDisplay } from './hologramPlayback'
+import { resolveHologramAnchors } from './hologramAnchors'
 import { BrainStudioShell } from './BrainStudioShell'
 import { ComputerIdeaInscription } from './ComputerIdeaInscription'
 import {
@@ -78,31 +66,45 @@ import {
   DISPLAY_RACK_INSTALLATION_SCALE,
   DISPLAY_RACK_INTERACTION_SIZE,
 } from './displayRackGeometry'
-import { FinalMonitorTarget, HiddenRelics } from './HiddenRelics'
 import { InteractiveCabinet } from './InteractiveCabinet'
 import { InteractiveChair } from './InteractiveChair'
 import { InteractiveGrimoire } from './InteractiveGrimoire'
+import { InteractivePlaque } from './InteractivePlaque'
 import { InteractiveTentacleLamp } from './InteractiveTentacleLamp'
 import { LovecraftParticleMorphBust } from './LovecraftParticleMorphBust'
 import { MechanicalOctopusInstallation } from './MechanicalOctopusInstallation'
 import { MonitorInstallation } from './MonitorInstallation'
-import {
-  ObjectCalloutOverlay,
-  type ObjectCalloutTarget,
-} from './ObjectCalloutOverlay'
 import { PostEffects } from './PostEffects'
 import { PerfectTyrannyInscription } from './PerfectTyrannyInscription'
 import { RoomShell } from './RoomShell'
 import { RendererExposureController, StudioLighting } from './StudioLighting'
 import { StudioLightingSettingsProvider } from './StudioLightingSettingsContext'
 import { VideoBeyondScreenInscription } from './VideoBeyondScreenInscription'
-import { resolveChairSwivelPoint } from './chairRotation'
 import { filterRelicHostProxyIntersections } from './relicPointerEvents'
-import { resolveLampRelicWorldRadius } from './lampGlow'
+import { StudioPerformanceProbe } from './StudioPerformanceProbe'
+import { AdaptiveRenderBudget } from './AdaptiveRenderBudget'
+import { installDirectLightOptimization } from './optimizeDirectLights'
 
-const ArtifactDetailScene = lazy(() => import('./ArtifactDetailScene').then((module) => ({
-  default: module.ArtifactDetailScene,
-})))
+installDirectLightOptimization()
+
+/** Compose inside a full-page render surface. A smaller CSS canvas would clip
+ * zoomed/rotated models at an artificial rectangle in the middle of the page. */
+function StudioViewportComposition() {
+  const camera = useThree((state) => state.camera)
+  const size = useThree((state) => state.size)
+  useEffect(() => {
+    if (!(camera instanceof PerspectiveCamera)) return
+    const mobile = size.width <= 720
+    const wide = size.width / size.height >= 1.5
+    const heightFraction = mobile ? 0.63 : wide ? 0.84 : 0.71
+    const centerY = mobile ? 0.565 : wide ? 0.52 : 0.575
+    camera.fov = MathUtils.radToDeg(2 * Math.atan(Math.tan(MathUtils.degToRad(22)) / heightFraction))
+    camera.setViewOffset(size.width, size.height, 0, (0.5 - centerY) * size.height, size.width, size.height)
+    camera.updateProjectionMatrix()
+    return () => { camera.clearViewOffset() }
+  }, [camera, size.width, size.height])
+  return null
+}
 
 function markSceneMilestone(name: string) {
   if (typeof performance === 'undefined' || !performance.mark) return
@@ -111,20 +113,14 @@ function markSceneMilestone(name: string) {
 
 export type StudioCanvasHandle = {
   resetCamera: () => void
-  focusRelic: (relicId: HiddenRelicId, onComplete: () => void) => boolean
   focusDreamArchive: (onComplete: () => void) => boolean
-  cancelRelicFocus: () => void
+  cancelFocus: () => void
 }
 
 type StudioCanvasProps = {
-  view: MysteryView
-  foundRelicIds: readonly HiddenRelicId[]
-  finaleReady: boolean
-  onOpenRelic: (relicId: HiddenRelicId) => void
   onOpenDreamArchive: () => void
   onOpenGrimoireAlbum: () => void
   onOpenTelevision: () => void
-  onOpenFinale: () => void
   editingLayout: boolean
   editingTransforms: boolean
   studioLayout: StudioLayout
@@ -142,8 +138,6 @@ type StudioCanvasProps = {
 export type StudioSceneCopy = Pick<
   StudioCopy,
   | 'assetLabels'
-  | 'terminalCalloutLabel'
-  | 'dreamArchiveCalloutLabel'
   | 'videoBeyondScreenText'
   | 'computerIdeaText'
   | 'perfectTyrannyText'
@@ -158,12 +152,8 @@ const LOCAL_STUDIO_ASSET_BY_ID = new Map(
 )
 
 const DREAM_ARCHIVE_SHELF_ASSET_ID = 'demonic-display-rack'
-const DREAM_ARCHIVE_SHELF_CALLOUT_ID = 'dream-archive-shelf'
 const DREAM_ARCHIVE_SHELF_DEFAULT_ANCHOR = [-1.45, 0.92, 0.7] as const
 const VINTAGE_TELEVISION_ASSET_ID = 'vintage-television'
-const INTERACTIVE_CHAIR_RELIC_ID: HiddenRelicId = 'spinal-clasp'
-const CHAIR_SWIVEL_RENDER_PIVOT = [0, 0.438, 0] as const
-const CHAIR_TURNING_SUPPRESSED_RELIC_IDS = [INTERACTIVE_CHAIR_RELIC_ID] as const
 const ignoreTextLayerSelection = () => undefined
 const ignoreTextLayerCommit = () => undefined
 const ignoreStudioProxyRaycast = () => undefined
@@ -185,7 +175,7 @@ const MAX_CAMERA_DISTANCE = 30
 const MIN_POLAR_ANGLE = 0.18
 const MAX_POLAR_ANGLE = 1.48
 const CAMERA_RETURN_DURATION = 0.68
-const RELIC_FOCUS_DURATION = 0.82
+const SCENE_FOCUS_DURATION = 0.82
 const DEFAULT_CAMERA_TARGET_VECTOR = new Vector3(...DEFAULT_CAMERA_TARGET)
 const DEFAULT_CAMERA_SPHERICAL = new Spherical().setFromVector3(
   new Vector3(...DEFAULT_CAMERA_POSITION).sub(DEFAULT_CAMERA_TARGET_VECTOR),
@@ -193,10 +183,6 @@ const DEFAULT_CAMERA_SPHERICAL = new Spherical().setFromVector3(
 const INTRO_CAMERA_SPHERICAL = new Spherical().setFromVector3(
   new Vector3(...INTRO_CAMERA_POSITION).sub(DEFAULT_CAMERA_TARGET_VECTOR),
 )
-const DETAIL_CAMERA_DIRECTION = new Vector3(...DEFAULT_CAMERA_POSITION)
-  .sub(DEFAULT_CAMERA_TARGET_VECTOR)
-  .normalize()
-
 type OrbitControlsHandle = ComponentRef<typeof OrbitControls>
 
 type CameraReturnState =
@@ -214,7 +200,7 @@ type CameraReturnState =
       fromZoom: number
     }
 
-type RelicFocusState =
+type SceneFocusState =
   | {
       phase: 'pending'
       toTarget: Vector3
@@ -266,22 +252,6 @@ function snapCameraToDefault(controls: OrbitControlsHandle) {
   controls.saveState()
 }
 
-function snapCameraToDetail(controls: OrbitControlsHandle) {
-  const damping = controls.enableDamping
-  controls.enableDamping = false
-  controls.target.set(...DETAIL_CENTER)
-  controls.object.position
-    .copy(controls.target)
-    .addScaledVector(DETAIL_CAMERA_DIRECTION, DETAIL_INITIAL_CAMERA_DISTANCE)
-  if (controls.object instanceof PerspectiveCamera) {
-    controls.object.zoom = 1
-  }
-  controls.object.updateProjectionMatrix()
-  controls.update()
-  controls.enableDamping = damping
-  controls.saveState()
-}
-
 function CameraIntroReady({
   cameraReturnRef,
 }: {
@@ -302,13 +272,13 @@ function CameraTransitionDriver({
   controlsRef,
   nativePointerActiveRef,
   cameraReturnRef,
-  relicFocusRef,
+  sceneFocusRef,
   reducedMotionRef,
 }: {
   controlsRef: RefObject<OrbitControlsHandle | null>
   nativePointerActiveRef: MutableRefObject<boolean>
   cameraReturnRef: MutableRefObject<CameraReturnState | null>
-  relicFocusRef: MutableRefObject<RelicFocusState | null>
+  sceneFocusRef: MutableRefObject<SceneFocusState | null>
   reducedMotionRef: MutableRefObject<boolean>
 }) {
   const targetScratchRef = useRef(new Vector3())
@@ -322,72 +292,72 @@ function CameraTransitionDriver({
 
     const dt = Math.min(frameDelta, 0.05)
     const cameraReturn = cameraReturnRef.current
-    const relicFocus = relicFocusRef.current
+    const sceneFocus = sceneFocusRef.current
     const reducedMotion = reducedMotionRef.current
 
-    if (relicFocus) {
+    if (sceneFocus) {
       clearOrbitMomentum(controls)
       controls.enabled = false
 
-      if (relicFocus.phase === 'pending') {
+      if (sceneFocus.phase === 'pending') {
         const approachDirection = offsetScratchRef.current
           .copy(controls.object.position)
-          .sub(relicFocus.toTarget)
+          .sub(sceneFocus.toTarget)
         if (approachDirection.lengthSq() < 0.000001) {
           controls.object.getWorldDirection(approachDirection).multiplyScalar(-1)
         }
         approachDirection.normalize()
         const toPosition = positionScratchRef.current
-          .copy(relicFocus.toTarget)
-          .addScaledVector(approachDirection, relicFocus.distance)
+          .copy(sceneFocus.toTarget)
+          .addScaledVector(approachDirection, sceneFocus.distance)
 
         if (reducedMotion) {
-          controls.target.copy(relicFocus.toTarget)
+          controls.target.copy(sceneFocus.toTarget)
           controls.object.position.copy(toPosition)
           controls.object.zoom = 1
           controls.object.updateProjectionMatrix()
           controls.update()
-          relicFocusRef.current = null
+          sceneFocusRef.current = null
           controls.enabled = true
-          relicFocus.onComplete()
+          sceneFocus.onComplete()
           return
         }
 
-        relicFocusRef.current = {
+        sceneFocusRef.current = {
           phase: 'running',
           startedAt: performance.now(),
           fromPosition: controls.object.position.clone(),
           fromTarget: controls.target.clone(),
           toPosition: toPosition.clone(),
-          toTarget: relicFocus.toTarget.clone(),
+          toTarget: sceneFocus.toTarget.clone(),
           fromZoom: controls.object.zoom,
-          onComplete: relicFocus.onComplete,
+          onComplete: sceneFocus.onComplete,
         }
         return
       }
 
-      const elapsedSeconds = (performance.now() - relicFocus.startedAt) / 1000
-      const progress = MathUtils.clamp(elapsedSeconds / RELIC_FOCUS_DURATION, 0, 1)
+      const elapsedSeconds = (performance.now() - sceneFocus.startedAt) / 1000
+      const progress = MathUtils.clamp(elapsedSeconds / SCENE_FOCUS_DURATION, 0, 1)
       const eased = smootherStep(progress)
-      controls.target.lerpVectors(relicFocus.fromTarget, relicFocus.toTarget, eased)
+      controls.target.lerpVectors(sceneFocus.fromTarget, sceneFocus.toTarget, eased)
       controls.object.position.lerpVectors(
-        relicFocus.fromPosition,
-        relicFocus.toPosition,
+        sceneFocus.fromPosition,
+        sceneFocus.toPosition,
         eased,
       )
-      controls.object.zoom = MathUtils.lerp(relicFocus.fromZoom, 1, eased)
+      controls.object.zoom = MathUtils.lerp(sceneFocus.fromZoom, 1, eased)
       controls.object.updateProjectionMatrix()
       controls.update()
 
       if (progress >= 1) {
-        controls.target.copy(relicFocus.toTarget)
-        controls.object.position.copy(relicFocus.toPosition)
+        controls.target.copy(sceneFocus.toTarget)
+        controls.object.position.copy(sceneFocus.toPosition)
         controls.object.zoom = 1
         controls.object.updateProjectionMatrix()
         controls.update()
-        relicFocusRef.current = null
+        sceneFocusRef.current = null
         controls.enabled = true
-        relicFocus.onComplete()
+        sceneFocus.onComplete()
       }
       return
     }
@@ -678,17 +648,11 @@ function StudioScene({
   controlsRef,
   nativePointerActiveRef,
   cameraReturnRef,
-  relicFocusRef,
-  relicHitPositionsRef,
+  sceneFocusRef,
   reducedMotionRef,
-  view,
-  foundRelicIds,
-  finaleReady,
-  onOpenRelic,
   onOpenDreamArchive,
   onOpenGrimoireAlbum,
   onOpenTelevision,
-  onOpenFinale,
   editingLayout,
   editingTransforms,
   studioLayout,
@@ -702,17 +666,11 @@ function StudioScene({
   controlsRef: RefObject<OrbitControlsHandle | null>
   nativePointerActiveRef: MutableRefObject<boolean>
   cameraReturnRef: MutableRefObject<CameraReturnState | null>
-  relicFocusRef: MutableRefObject<RelicFocusState | null>
-  relicHitPositionsRef: MutableRefObject<ReadonlyMap<HiddenRelicId, [number, number, number]>>
+  sceneFocusRef: MutableRefObject<SceneFocusState | null>
   reducedMotionRef: MutableRefObject<boolean>
-  view: MysteryView
-  foundRelicIds: readonly HiddenRelicId[]
-  finaleReady: boolean
-  onOpenRelic: (relicId: HiddenRelicId) => void
   onOpenDreamArchive: () => void
   onOpenGrimoireAlbum: () => void
   onOpenTelevision: () => void
-  onOpenFinale: () => void
   editingLayout: boolean
   editingTransforms: boolean
   studioLayout: StudioLayout
@@ -723,14 +681,22 @@ function StudioScene({
   onSelectAsset: (assetId: string | null) => void
   onAssetTransformChange: (assetId: string, transform: StudioTransform) => void
 }) {
+  const regressPerformance = useThree((state) => state.performance.regress)
+  const [hologramDisplay, setHologramDisplay] = useState(INITIAL_HOLOGRAM_DISPLAY)
+  const handleHologramExited = useCallback((session: number) => {
+    setHologramDisplay((current) => finishHologramExit(current, session))
+  }, [])
+  const hologram = useMemo(
+    () => resolveHologramAnchors(studioLayout, defaultStudioLayout),
+    [studioLayout, defaultStudioLayout],
+  )
+  useEffect(() => {
+    if (editingLayout) setHologramDisplay(clearHologramDisplay)
+  }, [editingLayout])
   const assetGroupRefs = useRef(new Map<string, Group>())
   const editableGroupCallbacksRef = useRef(
     new Map<string, (group: Group | null) => void>(),
   )
-  const [hoveredCalloutId, setHoveredCalloutId] = useState<string | null>(null)
-  const [cabinetDoorOpen, setCabinetDoorOpen] = useState(false)
-  const [chairTurnAngle, setChairTurnAngle] = useState(0)
-  const [chairTurning, setChairTurning] = useState(false)
   const transformDraggingRef = useRef(false)
   const scaleDragStartRef = useRef<[number, number, number] | null>(null)
   const normalizingScaleRef = useRef(false)
@@ -746,83 +712,8 @@ function StudioScene({
     editableGroupCallbacksRef.current.set(id, callback)
     return callback
   }, [registerEditableGroup])
-  const detailRelic = view.kind === 'relic'
-    ? HIDDEN_RELIC_BY_ID.get(view.relicId) ?? null
-    : null
-  const resolvedRelicHitPositions = useMemo(() => new Map(
-    HIDDEN_RELICS.map((relic) => {
-      const defaultTransform = defaultStudioLayout[relic.hostAssetId]
-      const currentTransform = studioLayout[relic.hostAssetId] ?? defaultTransform
-      const position = defaultTransform && currentTransform
-        ? relic.id === 'spinal-clasp'
-          ? resolveChairSwivelPoint(
-              relic.hitPosition,
-              CHAIR_SWIVEL_RENDER_PIVOT,
-              chairTurnAngle,
-              { defaultTransform, currentTransform },
-            )
-          : resolveAttachedPoint(defaultTransform, currentTransform, relic.hitPosition)
-        : [...relic.hitPosition] as [number, number, number]
-      return [relic.id, position] as const
-    }),
-  ), [chairTurnAngle, defaultStudioLayout, studioLayout])
-  useLayoutEffect(() => {
-    // Camera focus reads the same committed positions as the visible markers,
-    // including the chair's completed swivel; no per-frame React updates.
-    relicHitPositionsRef.current = resolvedRelicHitPositions
-  }, [relicHitPositionsRef, resolvedRelicHitPositions])
-  const lampTransform = studioLayout['tentacle-lamp'] ?? defaultStudioLayout['tentacle-lamp']
-  const lampRelicWorldRadius = resolveLampRelicWorldRadius(
-    lampTransform?.scale,
-    LOCAL_STUDIO_ASSET_BY_ID.get('tentacle-lamp')?.visualScale,
-  )
-  const finalMonitorPosition = useMemo(() => {
-    const defaultTransform = defaultStudioLayout['watching-monitor']
-    const currentTransform = studioLayout['watching-monitor'] ?? defaultTransform
-    return defaultTransform && currentTransform
-      ? resolveAttachedPoint(defaultTransform, currentTransform, FINAL_MONITOR_TARGET.position)
-      : [...FINAL_MONITOR_TARGET.position] as [number, number, number]
-  }, [defaultStudioLayout, studioLayout])
-  const dreamArchiveShelfPosition = useMemo(() => {
-    const defaultTransform = defaultStudioLayout[DREAM_ARCHIVE_SHELF_ASSET_ID]
-    const currentTransform = studioLayout[DREAM_ARCHIVE_SHELF_ASSET_ID] ?? defaultTransform
-    return defaultTransform && currentTransform
-      ? resolveAttachedPoint(defaultTransform, currentTransform, DREAM_ARCHIVE_SHELF_DEFAULT_ANCHOR)
-      : [...DREAM_ARCHIVE_SHELF_DEFAULT_ANCHOR] as [number, number, number]
-  }, [defaultStudioLayout, studioLayout])
   const lovecraftParticleBustTransform = studioLayout[LOVECRAFT_PARTICLE_BUST_ASSET_ID]
     ?? defaultStudioLayout[LOVECRAFT_PARTICLE_BUST_ASSET_ID]
-  const calloutTargetById = useMemo(() => new Map<string, ObjectCalloutTarget>([
-    ...HIDDEN_RELICS.map((relic) => [relic.id, {
-      id: relic.id,
-      label: studioCopy.assetLabels[relic.hostAssetId] ?? relic.hostLabel,
-      textLayerId: `asset-label:${relic.hostAssetId}`,
-      position: resolvedRelicHitPositions.get(relic.id) ?? relic.hitPosition,
-      accent: relic.accent,
-    }] as const),
-    [FINAL_MONITOR_TARGET.id, {
-      id: FINAL_MONITOR_TARGET.id,
-      label: studioCopy.terminalCalloutLabel,
-      textLayerId: 'terminalCalloutLabel',
-      position: finalMonitorPosition,
-      accent: '#d16a31',
-    }] as const,
-    [DREAM_ARCHIVE_SHELF_CALLOUT_ID, {
-      id: DREAM_ARCHIVE_SHELF_CALLOUT_ID,
-      label: studioCopy.dreamArchiveCalloutLabel,
-      textLayerId: 'dreamArchiveCalloutLabel',
-      position: dreamArchiveShelfPosition,
-      accent: '#c9a86a',
-    }] as const,
-  ]), [
-    dreamArchiveShelfPosition,
-    finalMonitorPosition,
-    resolvedRelicHitPositions,
-    studioCopy,
-  ])
-  const activeCalloutTarget = calloutTargetById.get(
-    hoveredCalloutId ?? '',
-  ) ?? null
   const selectedAssetObject = selectedAssetId
     ? assetGroupRefs.current.get(selectedAssetId) ?? null
     : null
@@ -830,7 +721,7 @@ function StudioScene({
   useEffect(() => {
     if (editingLayout) {
       cameraReturnRef.current = null
-      relicFocusRef.current = null
+      sceneFocusRef.current = null
       const controls = controlsRef.current
       if (controls) {
         clearOrbitMomentum(controls)
@@ -845,55 +736,22 @@ function StudioScene({
     cameraReturnRef,
     controlsRef,
     editingLayout,
-    relicFocusRef,
+    sceneFocusRef,
   ])
-
-  useEffect(() => {
-    if (view.kind !== 'studio') {
-      cameraReturnRef.current = null
-      setHoveredCalloutId(null)
-    }
-  }, [cameraReturnRef, view.kind])
-
-  useEffect(() => {
-    if (editingLayout) setHoveredCalloutId(null)
-  }, [editingLayout])
-
-  useLayoutEffect(() => {
-    if (!detailRelic) return
-    const controls = controlsRef.current
-    if (!controls) return
-
-    cameraReturnRef.current = null
-    relicFocusRef.current = null
-    clearOrbitMomentum(controls)
-    controls.enabled = true
-    snapCameraToDetail(controls)
-  }, [cameraReturnRef, controlsRef, detailRelic, relicFocusRef])
 
   return (
     <>
       <RendererExposureController />
-      {detailRelic ? (
-        <Suspense fallback={null}>
-          <ArtifactDetailScene key={detailRelic.id} relic={detailRelic} />
-        </Suspense>
-      ) : (
-        <>
-          <color attach="background" args={['#030506']} />
-          {/* Atmosphere stays in screen-space effects so dolly distance cannot darken the set. */}
-        </>
-      )}
 
-      <group visible={!detailRelic} name="persistent-studio-world">
-          <StudioLighting active={!detailRelic} />
+      <group name="persistent-studio-world">
+          <StudioLighting active />
           <RoomShell brainMode />
 
           <Suspense fallback={null}>
             <BrainStudioShell />
             <CameraIntroReady cameraReturnRef={cameraReturnRef} />
           </Suspense>
-          <Suspense fallback={null}>
+          {editingLayout ? <Suspense fallback={null}>
             <VideoBeyondScreenInscription
               ref={getEditableGroupRef(VIDEO_BEYOND_SCREEN_INSCRIPTION_ID)}
               text={studioCopy.videoBeyondScreenText}
@@ -905,8 +763,8 @@ function StudioScene({
               selected={selectedAssetId === VIDEO_BEYOND_SCREEN_INSCRIPTION_ID}
               onSelect={() => onSelectAsset(VIDEO_BEYOND_SCREEN_INSCRIPTION_ID)}
             />
-          </Suspense>
-          <Suspense fallback={null}>
+          </Suspense> : null}
+          {editingLayout ? <Suspense fallback={null}>
             <PerfectTyrannyInscription
               ref={getEditableGroupRef(PERFECT_TYRANNY_INSCRIPTION_ID)}
               text={studioCopy.perfectTyrannyText}
@@ -918,26 +776,23 @@ function StudioScene({
               selected={selectedAssetId === PERFECT_TYRANNY_INSCRIPTION_ID}
               onSelect={() => onSelectAsset(PERFECT_TYRANNY_INSCRIPTION_ID)}
             />
-          </Suspense>
+          </Suspense> : null}
           {STUDIO_ASSETS.map((asset) => {
               const transform = studioLayout[asset.id] ?? defaultStudioLayout[asset.id]
               const localAsset = LOCAL_STUDIO_ASSET_BY_ID.get(asset.id) ?? asset
-              const hostRelic = HIDDEN_RELIC_BY_HOST_ASSET_ID.get(asset.id)
               const editSelected = editingLayout && selectedAssetId === asset.id
               const isDreamArchiveShelf = asset.id === DREAM_ARCHIVE_SHELF_ASSET_ID
               const isVintageTelevision = asset.id === VINTAGE_TELEVISION_ASSET_ID
+              const isHologramTrigger = asset.id === 'cthulhu-wall-mask'
               const isInteractiveCabinet = asset.kind === 'cabinet'
               const isInteractiveChair = asset.kind === 'chair'
               const isInteractiveGrimoire = asset.kind === 'grimoire'
               const isInteractiveLamp = asset.kind === 'lamp'
+              const isInteractivePlaque = asset.kind === 'plaque'
               const interactionProxySize = isDreamArchiveShelf
                 ? DISPLAY_RACK_INTERACTION_SIZE
                 : asset.placeholderSize
               if (!transform) return null
-
-              const proxyCalloutId = isDreamArchiveShelf
-                ? DREAM_ARCHIVE_SHELF_CALLOUT_ID
-                : hostRelic?.id ?? null
 
               return (
                 <group
@@ -951,7 +806,6 @@ function StudioScene({
                   onClick={!editingLayout && isVintageTelevision ? (event) => {
                     if (event.button !== 0 || event.delta > 8) return
                     event.stopPropagation()
-                    setHoveredCalloutId(null)
                     onOpenTelevision()
                   } : undefined}
                   onPointerEnter={!editingLayout && isVintageTelevision ? (event) => {
@@ -970,59 +824,36 @@ function StudioScene({
                     {asset.kind === 'octopus' ? (
                       <MechanicalOctopusInstallation asset={localAsset} />
                     ) : asset.kind === 'candelabra' ? (
-                      <CandelabraInstallation asset={localAsset} active={!detailRelic} />
+                      <CandelabraInstallation asset={localAsset} active />
                     ) : asset.kind === 'lamp' ? (
                       <InteractiveTentacleLamp
                         asset={localAsset}
-                        interactive={!detailRelic && !editingLayout}
+                        interactive={!editingLayout}
                         reducedMotionRef={reducedMotionRef}
-                        onHoverChange={(hovered) => {
-                          if (!proxyCalloutId) return
-                          setHoveredCalloutId((current) => hovered
-                            ? proxyCalloutId
-                            : current === proxyCalloutId ? null : current)
-                        }}
                       />
                     ) : asset.kind === 'chair' ? (
                       <InteractiveChair
                         asset={localAsset}
-                        interactive={!detailRelic && !editingLayout}
-                        onHoverChange={(hovered) => {
-                          if (!proxyCalloutId) return
-                          setHoveredCalloutId((current) => hovered
-                            ? proxyCalloutId
-                            : current === proxyCalloutId ? null : current)
-                        }}
-                        onTurnStart={() => {
-                          setChairTurning(true)
-                          setHoveredCalloutId(null)
-                        }}
-                        onTurnComplete={(angle) => {
-                          setChairTurnAngle(angle)
-                          setChairTurning(false)
-                        }}
+                        interactive={!editingLayout}
                       />
                     ) : asset.kind === 'monitor' ? (
                       <MonitorInstallation
                         asset={localAsset}
-                        finaleReady={finaleReady}
-                        active={!detailRelic}
+                        active
                       />
                     ) : asset.kind === 'displayRack' ? (
                       <DisplayRackInstallation asset={localAsset} />
                     ) : asset.kind === 'wallMask' ? (
-                      <CthulhuMaskInstallation asset={localAsset} active={!detailRelic} />
+                      <CthulhuMaskInstallation asset={localAsset} active />
                     ) : asset.kind === 'cabinet' ? (
                       <InteractiveCabinet
                         asset={localAsset}
-                        interactive={!detailRelic && !editingLayout}
-                        onDoorOpenChange={setCabinetDoorOpen}
-                        onHoverChange={(hovered) => {
-                          if (!proxyCalloutId) return
-                          setHoveredCalloutId((current) => hovered
-                            ? proxyCalloutId
-                            : current === proxyCalloutId ? null : current)
-                        }}
+                        interactive={!editingLayout}
+                      />
+                    ) : asset.kind === 'plaque' ? (
+                      <InteractivePlaque
+                        asset={localAsset}
+                        interactive={!editingLayout}
                       />
                     ) : asset.kind === 'grimoire' ? (
                       <InteractiveGrimoire
@@ -1032,7 +863,7 @@ function StudioScene({
                         onOpenAlbum={onOpenGrimoireAlbum}
                       />
                     ) : (
-                      <AssetSlot asset={localAsset} active={!detailRelic} />
+                      <AssetSlot asset={localAsset} active />
                     )}
                   </Select>
                   {isDreamArchiveShelf && lovecraftParticleBustTransform ? (
@@ -1051,13 +882,13 @@ function StudioScene({
                           ref={getEditableGroupRef(LOVECRAFT_PARTICLE_BUST_ASSET_ID)}
                           transform={lovecraftParticleBustTransform}
                           editing={editingLayout}
-                          interactive={!detailRelic && !editingLayout}
+                          interactive={!editingLayout}
                           onSelect={() => onSelectAsset(LOVECRAFT_PARTICLE_BUST_ASSET_ID)}
                         />
                       </Select>
                     </group>
                   ) : null}
-                  {asset.id === 'reliquary-computer' ? (
+                  {editingLayout && asset.id === 'reliquary-computer' ? (
                     <Suspense fallback={null}>
                       <ComputerIdeaInscription
                         ref={getEditableGroupRef(COMPUTER_IDEA_INSCRIPTION_ID)}
@@ -1076,10 +907,11 @@ function StudioScene({
                     !isInteractiveCabinet
                     && !isInteractiveChair
                     && !isInteractiveLamp
+                    && !isInteractivePlaque
                   ) || editingLayout ? (
                     <mesh
                     raycast={
-                      detailRelic || (isInteractiveGrimoire && !editingLayout)
+                      isInteractiveGrimoire && !editingLayout
                         ? ignoreStudioProxyRaycast
                         : Mesh.prototype.raycast
                     }
@@ -1097,25 +929,23 @@ function StudioScene({
                     } : isDreamArchiveShelf ? (event) => {
                       if (event.button !== 0 || event.delta > 8) return
                       event.stopPropagation()
-                      setHoveredCalloutId(null)
                       onOpenDreamArchive()
                     } : isVintageTelevision ? (event) => {
                       if (event.button !== 0 || event.delta > 8) return
                       event.stopPropagation()
-                      setHoveredCalloutId(null)
                       onOpenTelevision()
+                    } : isHologramTrigger ? (event) => {
+                      if (event.button !== 0 || event.delta > 8) return
+                      event.stopPropagation()
+                      setHologramDisplay(toggleHologramDisplay)
                     } : undefined}
-                    onPointerEnter={!editingLayout && (proxyCalloutId || isVintageTelevision) ? (event) => {
-                      if (isDreamArchiveShelf || isVintageTelevision) event.stopPropagation()
-                      if (proxyCalloutId) setHoveredCalloutId(proxyCalloutId)
-                      if (isDreamArchiveShelf || isVintageTelevision) document.body.style.cursor = 'pointer'
+                    onPointerEnter={!editingLayout && (isDreamArchiveShelf || isVintageTelevision || isHologramTrigger) ? (event) => {
+                      event.stopPropagation()
+                      document.body.style.cursor = 'pointer'
                     } : undefined}
-                    onPointerLeave={!editingLayout && (proxyCalloutId || isVintageTelevision) ? (event) => {
-                      if (isDreamArchiveShelf || isVintageTelevision) event.stopPropagation()
-                      if (proxyCalloutId) {
-                        setHoveredCalloutId((current) => current === proxyCalloutId ? null : current)
-                      }
-                      if (isDreamArchiveShelf || isVintageTelevision) document.body.style.cursor = ''
+                    onPointerLeave={!editingLayout && (isDreamArchiveShelf || isVintageTelevision || isHologramTrigger) ? (event) => {
+                      event.stopPropagation()
+                      document.body.style.cursor = ''
                     } : undefined}
                   >
                     <boxGeometry args={interactionProxySize} />
@@ -1131,7 +961,7 @@ function StudioScene({
                 </group>
               )
           })}
-            {!detailRelic && editingTransforms && selectedAssetObject ? (
+            {editingTransforms && selectedAssetObject ? (
               <TransformControls
                 object={selectedAssetObject}
                 mode={editorTool}
@@ -1154,7 +984,7 @@ function StudioScene({
                       ]
                     : null
                   cameraReturnRef.current = null
-                  relicFocusRef.current = null
+                  sceneFocusRef.current = null
                   const controls = controlsRef.current
                   if (controls) controls.enabled = false
                 }}
@@ -1198,30 +1028,13 @@ function StudioScene({
                 }}
               />
             ) : null}
-            {!detailRelic && !editingLayout ? (
-              <>
-                <HiddenRelics
-                  foundRelicIds={foundRelicIds}
-                  suppressedRelicIds={chairTurning ? CHAIR_TURNING_SUPPRESSED_RELIC_IDS : undefined}
-                  fingerprintCasketAccessible={cabinetDoorOpen}
-                  hitPositions={resolvedRelicHitPositions}
-                  lampRelicWorldRadius={lampRelicWorldRadius}
-                  onOpenRelic={onOpenRelic}
-                />
-                <FinalMonitorTarget
-                  enabled={finaleReady}
-                  position={finalMonitorPosition}
-                  onOpenFinale={onOpenFinale}
-                  onHoverChange={(hovered) => {
-                    setHoveredCalloutId(hovered ? FINAL_MONITOR_TARGET.id : null)
-                  }}
-                />
-              </>
-            ) : null}
-          <CandleSet active={!detailRelic} />
-          <ObjectCalloutOverlay
-            target={!editingLayout && view.kind === 'studio' ? activeCalloutTarget : null}
-          />
+          <CandleSet active />
+          {hologramDisplay.mounted && !editingLayout ? (
+            <Suspense fallback={null}>
+              <AlexHologramProjection anchors={hologram.anchors} position={hologram.position}
+                active={hologramDisplay.active} session={hologramDisplay.session} onExited={handleHologramExited} />
+            </Suspense>
+          ) : null}
       </group>
 
       <OrbitControls
@@ -1229,15 +1042,15 @@ function StudioScene({
         makeDefault
         target={DEFAULT_CAMERA_TARGET}
         enableDamping
-        dampingFactor={0.055}
-        enablePan={!detailRelic}
+        dampingFactor={0.12}
+        enablePan
         enableRotate
         enableZoom
-        zoomToCursor={!detailRelic}
-        rotateSpeed={0.72}
+        zoomToCursor
+        rotateSpeed={0.8}
         panSpeed={0.76}
         zoomSpeed={0.82}
-        minDistance={detailRelic ? DETAIL_MIN_CAMERA_DISTANCE : MIN_CAMERA_DISTANCE}
+        minDistance={MIN_CAMERA_DISTANCE}
         maxDistance={MAX_CAMERA_DISTANCE}
         minPolarAngle={MIN_POLAR_ANGLE}
         maxPolarAngle={MAX_POLAR_ANGLE}
@@ -1247,13 +1060,14 @@ function StudioScene({
             if (controls) controls.enabled = false
             return
           }
-          if (relicFocusRef.current) {
+          if (sceneFocusRef.current) {
             const controls = controlsRef.current
             if (controls) controls.enabled = false
             return
           }
           cameraReturnRef.current = null
           nativePointerActiveRef.current = true
+          regressPerformance()
         }}
         onEnd={() => {
           nativePointerActiveRef.current = false
@@ -1263,30 +1077,25 @@ function StudioScene({
         controlsRef={controlsRef}
         nativePointerActiveRef={nativePointerActiveRef}
         cameraReturnRef={cameraReturnRef}
-        relicFocusRef={relicFocusRef}
+        sceneFocusRef={sceneFocusRef}
         reducedMotionRef={reducedMotionRef}
       />
       <CameraPerformanceRegressor />
       <StudioShadowMapController
-        dynamic={Boolean(detailRelic)}
+        dynamic={false}
         studioLayout={studioLayout}
       />
-      <PostEffects detailMode={Boolean(detailRelic)} />
+      <PostEffects editing={editingLayout} />
     </>
   )
 }
 
 export const StudioCanvas = memo(forwardRef<StudioCanvasHandle, StudioCanvasProps>(function StudioCanvas(
   {
-    view,
-    foundRelicIds,
-    finaleReady,
-    onOpenRelic,
-    onOpenDreamArchive,
+            onOpenDreamArchive,
     onOpenGrimoireAlbum,
     onOpenTelevision,
-    onOpenFinale,
-    editingLayout,
+      editingLayout,
     editingTransforms,
     studioLayout,
     defaultStudioLayout,
@@ -1306,7 +1115,7 @@ export const StudioCanvas = memo(forwardRef<StudioCanvasHandle, StudioCanvasProp
     window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   )
   const initialIntroEnabledRef = useRef(
-    view.kind === 'studio' && !reducedMotionRef.current,
+    !reducedMotionRef.current,
   )
   const controlsRef = useRef<OrbitControlsHandle>(null)
   const nativePointerActiveRef = useRef(false)
@@ -1315,8 +1124,7 @@ export const StudioCanvas = memo(forwardRef<StudioCanvasHandle, StudioCanvasProp
       ? { kind: 'intro', phase: 'waiting' }
       : null,
   )
-  const relicFocusRef = useRef<RelicFocusState | null>(null)
-  const relicHitPositionsRef = useRef<ReadonlyMap<HiddenRelicId, [number, number, number]>>(new Map())
+  const sceneFocusRef = useRef<SceneFocusState | null>(null)
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -1335,42 +1143,9 @@ export const StudioCanvas = memo(forwardRef<StudioCanvasHandle, StudioCanvasProp
         const controls = controlsRef.current
         if (!controls) return
 
-        relicFocusRef.current = null
+        sceneFocusRef.current = null
         controls.enabled = true
         cameraReturnRef.current = { kind: 'reset', phase: 'pending' }
-      },
-      focusRelic: (relicId, onComplete) => {
-        const controls = controlsRef.current
-        const relic = HIDDEN_RELIC_BY_ID.get(relicId)
-        if (
-          editingLayout
-          || !controls
-          || !relic
-          || view.kind !== 'studio'
-          || relicFocusRef.current
-        ) {
-          return false
-        }
-
-        const defaultTransform = defaultStudioLayout[relic.hostAssetId]
-        const currentTransform = studioLayout[relic.hostAssetId] ?? defaultTransform
-        const resolvedHitPosition = relicHitPositionsRef.current.get(relicId) ?? (
-          defaultTransform && currentTransform
-            ? resolveAttachedPoint(defaultTransform, currentTransform, relic.hitPosition)
-            : relic.hitPosition
-        )
-
-        cameraReturnRef.current = null
-        clearOrbitMomentum(controls)
-        nativePointerActiveRef.current = false
-        controls.enabled = false
-        relicFocusRef.current = {
-          phase: 'pending',
-          toTarget: new Vector3(...resolvedHitPosition),
-          distance: MathUtils.clamp(1.68 + relic.hitRadius * 1.3, 1.9, 2.1),
-          onComplete,
-        }
-        return true
       },
       focusDreamArchive: (onComplete) => {
         const controls = controlsRef.current
@@ -1381,8 +1156,7 @@ export const StudioCanvas = memo(forwardRef<StudioCanvasHandle, StudioCanvasProp
           || !controls
           || !defaultTransform
           || !currentTransform
-          || view.kind !== 'studio'
-          || relicFocusRef.current
+          || sceneFocusRef.current
         ) {
           return false
         }
@@ -1396,7 +1170,7 @@ export const StudioCanvas = memo(forwardRef<StudioCanvasHandle, StudioCanvasProp
         clearOrbitMomentum(controls)
         nativePointerActiveRef.current = false
         controls.enabled = false
-        relicFocusRef.current = {
+        sceneFocusRef.current = {
           phase: 'pending',
           toTarget: new Vector3(...resolvedTarget),
           distance: 1.95,
@@ -1404,8 +1178,8 @@ export const StudioCanvas = memo(forwardRef<StudioCanvasHandle, StudioCanvasProp
         }
         return true
       },
-      cancelRelicFocus: () => {
-        relicFocusRef.current = null
+      cancelFocus: () => {
+        sceneFocusRef.current = null
         const controls = controlsRef.current
         if (controls) controls.enabled = true
       },
@@ -1414,7 +1188,6 @@ export const StudioCanvas = memo(forwardRef<StudioCanvasHandle, StudioCanvasProp
       defaultStudioLayout,
       editingLayout,
       studioLayout,
-      view.kind,
     ],
   )
 
@@ -1423,19 +1196,19 @@ export const StudioCanvas = memo(forwardRef<StudioCanvasHandle, StudioCanvasProp
       events={studioPointerEvents}
       shadows={{ type: PCFShadowMap }}
       frameloop={renderPaused ? 'never' : 'always'}
-      dpr={[0.75, 1.25]}
+      dpr={[0.75, 1.1]}
       performance={{ min: 0.6, max: 1, debounce: 480 }}
       camera={{
         position: initialIntroEnabledRef.current
           ? INTRO_CAMERA_POSITION
           : DEFAULT_CAMERA_POSITION,
-        fov: 40,
+        fov: 59.3,
         near: 0.05,
         far: 80,
       }}
       gl={{
         antialias: false,
-        alpha: false,
+        alpha: true,
         powerPreference: 'high-performance',
       }}
       onCreated={({ gl }) => {
@@ -1448,7 +1221,9 @@ export const StudioCanvas = memo(forwardRef<StudioCanvasHandle, StudioCanvasProp
         if (editingLayout) onSelectAsset(null)
       }}
     >
-      <AdaptiveDpr />
+      <AdaptiveRenderBudget />
+      <StudioViewportComposition />
+      <StudioPerformanceProbe />
       <StudioLightingSettingsProvider settings={studioLighting}>
         <StudioTextLayerProvider
           active={false}
@@ -1463,17 +1238,11 @@ export const StudioCanvas = memo(forwardRef<StudioCanvasHandle, StudioCanvasProp
               controlsRef={controlsRef}
               nativePointerActiveRef={nativePointerActiveRef}
               cameraReturnRef={cameraReturnRef}
-              relicFocusRef={relicFocusRef}
-              relicHitPositionsRef={relicHitPositionsRef}
+              sceneFocusRef={sceneFocusRef}
               reducedMotionRef={reducedMotionRef}
-              view={view}
-              foundRelicIds={foundRelicIds}
-              finaleReady={finaleReady}
-              onOpenRelic={onOpenRelic}
               onOpenDreamArchive={onOpenDreamArchive}
               onOpenGrimoireAlbum={onOpenGrimoireAlbum}
               onOpenTelevision={onOpenTelevision}
-              onOpenFinale={onOpenFinale}
               editingLayout={editingLayout}
               editingTransforms={editingTransforms}
               studioLayout={studioLayout}

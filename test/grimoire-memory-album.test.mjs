@@ -24,7 +24,7 @@ test('古书打开动画完成后才触发失落相册', async () => {
   assert.match(app, /onOpenGrimoireAlbum=\{openGrimoireMemory\}/)
   assert.match(app, /const GrimoireMemoryAlbum = lazy\(/)
   assert.match(app, /const \[grimoireMemoryOpen, setGrimoireMemoryOpen\] = useState\(false\)/)
-  assert.match(app, /renderPaused=\{dreamArchiveOpen \|\| grimoireMemoryOpen \|\| televisionTransmissionOpen/)
+  assert.match(app, /renderPaused=\{grimoireMemoryOpen \|\| televisionTransmissionOpen/)
   assert.match(app, /const handleKeyDown = \(event: KeyboardEvent\) => \{[\s\S]{0,80}if \(grimoireMemoryOpen\) return/)
   assert.match(app, /<GrimoireMemoryAlbum onClose=\{closeGrimoireMemory\} \/>/)
 })

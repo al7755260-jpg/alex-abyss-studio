@@ -83,7 +83,7 @@ const FRAGMENT_SHADER = /* glsl */ `
     color *= mix(0.34, 1.0, vignette);
     color += vec3(0.006, 0.02, 0.019);
 
-    gl_FragColor = vec4(color, screenMask * 0.97);
+    gl_FragColor = vec4(color, 1.0);
   }
 `
 
@@ -114,8 +114,11 @@ export function VintageTelevisionStatic({ active = true }: VintageTelevisionStat
         uniforms={uniforms}
         vertexShader={VERTEX_SHADER}
         fragmentShader={FRAGMENT_SHADER}
-        transparent
-        depthWrite={false}
+        // The CRT is an opaque surface. Drawing it in the transparent pass
+        // after holograms used to overwrite projections in front of the TV.
+        transparent={false}
+        depthTest
+        depthWrite
         toneMapped={false}
       />
     </mesh>

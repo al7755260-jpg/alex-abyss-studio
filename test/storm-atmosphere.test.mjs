@@ -10,7 +10,7 @@ test('雨夜氛围只在主场景空闲态挂载并保持纯装饰语义', async
     source('src/ui/atmosphere/StormAtmosphere.tsx'),
   ])
 
-  assert.match(app, /mystery\.state\.view\.kind === 'studio'[\s\S]{0,180}!editingLayout[\s\S]{0,180}!dreamArchiveOpen[\s\S]{0,180}relicTransitionPhase === 'idle'[\s\S]{0,120}<StormAtmosphere \/>/)
+  assert.match(app, /!editingLayout[\s\S]{0,180}!grimoireMemoryOpen[\s\S]{0,180}!televisionTransmissionOpen[\s\S]{0,120}<StormAtmosphere \/>/)
   assert.match(weather, /className="storm-atmosphere" aria-hidden="true"/)
   assert.equal((weather.match(/<span\b/g) ?? []).length, 1)
 })

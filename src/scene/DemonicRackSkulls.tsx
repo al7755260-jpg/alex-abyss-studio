@@ -7,6 +7,7 @@ import {
 } from 'react'
 import { useGLTF } from '@react-three/drei'
 import { Box3, Mesh, Vector3 } from 'three'
+import { useSmallPropLod } from './useSmallPropLod'
 
 type Vector3Tuple = [number, number, number]
 
@@ -108,6 +109,8 @@ function LoadedRackSkull({ spec }: { spec: RackSkullSpec }) {
       offset: [-center.x, -bounds.min.y, -center.z] as Vector3Tuple,
     }
   }, [gltf.scene, spec])
+
+  useSmallPropLod(prepared.object, spec.src.replace('-optimized.glb', '-realtime.glb'))
 
   return (
     <group

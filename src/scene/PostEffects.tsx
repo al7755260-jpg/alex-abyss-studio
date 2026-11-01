@@ -10,8 +10,10 @@ import { BlendFunction } from 'postprocessing'
 
 export function PostEffects({
   detailMode = false,
+  editing = false,
 }: {
   detailMode?: boolean
+  editing?: boolean
 }) {
   return (
     <EffectComposer
@@ -19,7 +21,7 @@ export function PostEffects({
       multisampling={0}
       enableNormalPass={false}
     >
-      <Outline
+      {import.meta.env.DEV && editing ? <Outline
         blur={false}
         xRay={false}
         edgeStrength={4.6}
@@ -27,19 +29,19 @@ export function PostEffects({
         visibleEdgeColor="#f0ae68"
         hiddenEdgeColor="#35130e"
         resolutionScale={0.5}
-      />
+      /> : <></>}
       <Bloom
         mipmapBlur
         levels={5}
         resolutionScale={0.5}
-        intensity={0.3}
+        intensity={0.36}
         luminanceThreshold={1.25}
         luminanceSmoothing={0.18}
         radius={0.42}
       />
       <BrightnessContrast
-        brightness={detailMode ? 0.025 : 0.03}
-        contrast={detailMode ? -0.04 : -0.08}
+        brightness={detailMode ? 0.025 : 0.01}
+        contrast={detailMode ? -0.04 : 0.015}
       />
       <Noise
         opacity={0.012}

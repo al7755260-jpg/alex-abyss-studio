@@ -3,11 +3,11 @@ import { useEffect, useRef } from 'react'
 import type { PointLight, SpotLight } from 'three'
 import { FACE_CANDLE_LIGHT, faceCandleIntensity } from './faceCandleLighting'
 import { useStudioLightingSettings } from './StudioLightingSettingsContext'
+import { StudioEnvironment } from './StudioEnvironment'
 
 function BrainPulseLights({ active = true }: { active?: boolean }) {
   const { globalIntensity } = useStudioLightingSettings()
   const tissueLightRef = useRef<PointLight | null>(null)
-  const rimLightRef = useRef<PointLight | null>(null)
   const faceCandleLightRef = useRef<SpotLight | null>(null)
 
   useEffect(() => {
@@ -25,12 +25,9 @@ function BrainPulseLights({ active = true }: { active?: boolean }) {
     const nervousFlicker = Math.sin(time * 3.7 + 0.9) * 0.5 + 0.5
 
     if (tissueLightRef.current) {
-      tissueLightRef.current.intensity = (2.35
-        + slowPulse * 0.95
-        + nervousFlicker * 0.18) * globalIntensity
-    }
-    if (rimLightRef.current) {
-      rimLightRef.current.intensity = (1.85 + (1 - slowPulse) * 0.42) * globalIntensity
+      tissueLightRef.current.intensity = (5.9
+        + slowPulse * 0.65
+        + nervousFlicker * 0.1) * globalIntensity
     }
     if (faceCandleLightRef.current) {
       faceCandleLightRef.current.intensity = faceCandleIntensity(time) * globalIntensity
@@ -40,20 +37,14 @@ function BrainPulseLights({ active = true }: { active?: boolean }) {
   return (
     <>
       <pointLight
+        name="brain-warm-bounce"
         ref={tissueLightRef}
-        color="#8d251f"
-        intensity={2.8 * globalIntensity}
+        color="#c65b35"
+        intensity={6.25 * globalIntensity}
         distance={8.5}
         decay={2}
-        position={[-3.6, 3.5, -2.6]}
-      />
-      <pointLight
-        ref={rimLightRef}
-        color="#2f8f96"
-        intensity={2.1 * globalIntensity}
-        distance={10}
-        decay={2}
-        position={[4.5, 5.2, 1.4]}
+        position={[-2.65, 2.9, -2.3]}
+        castShadow={false}
       />
       <spotLight
         name="face-candle-reflection"
@@ -73,24 +64,32 @@ function BrainPulseLights({ active = true }: { active?: boolean }) {
 
 export function StudioLighting({ active = true }: { active?: boolean }) {
   const { ambientIntensity, globalIntensity } = useStudioLightingSettings()
+  const gl = useThree((state) => state.gl)
+
+  useEffect(() => {
+    // Refresh the cached key shadow once after this lighting rig is mounted.
+    gl.shadowMap.needsUpdate = true
+  }, [gl])
 
   return (
     <group>
+      <StudioEnvironment />
       <ambientLight
-        color="#6f797d"
-        intensity={0.42 * globalIntensity * ambientIntensity}
+        color="#b5b0a7"
+        intensity={0.12 * globalIntensity * ambientIntensity}
       />
       <hemisphereLight
-        args={['#4d5b61', '#251516']}
-        intensity={0.58 * globalIntensity * ambientIntensity}
+        args={['#9daeb3', '#352014']}
+        intensity={0.22 * globalIntensity * ambientIntensity}
         position={[0, 4, 0]}
       />
 
       <directionalLight
         castShadow
-        color="#94a3ae"
-        intensity={1.05 * globalIntensity}
-        position={[-4.2, 6.2, 5]}
+        name="portrait-soft-key"
+        color="#ffe5cc"
+        intensity={1.3 * globalIntensity}
+        position={[-5.2, 7, 7]}
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
         shadow-camera-near={0.5}
@@ -104,42 +103,15 @@ export function StudioLighting({ active = true }: { active?: boolean }) {
       />
 
       <directionalLight
-        color="#9f978c"
-        intensity={0.56 * globalIntensity}
-        position={[4.8, 3.1, 6.4]}
+        name="portrait-cool-fill"
+        castShadow={false}
+        color="#91b7c7"
+        intensity={0.28 * globalIntensity}
+        position={[5, 3.1, 5.5]}
       />
 
-      <spotLight
-        castShadow={false}
-        color="#58747c"
-        intensity={11.5 * globalIntensity}
-        distance={14}
-        angle={0.62}
-        penumbra={0.94}
-        decay={2}
-        position={[3.5, 4.9, 3.8]}
-      />
-      <pointLight
-        color="#23968d"
-        intensity={1.65 * globalIntensity}
-        distance={3.8}
-        decay={2}
-        position={[0, 1.62, -1.45]}
-      />
-      <pointLight
-        color="#8d201f"
-        intensity={3.6 * globalIntensity}
-        distance={4.7}
-        decay={2}
-        position={[-2.55, 1.34, -1.92]}
-      />
-      <pointLight
-        color="#724335"
-        intensity={1.65 * globalIntensity}
-        distance={3.8}
-        decay={2}
-        position={[2.75, 0.82, -2.25]}
-      />
+      {/* Four direct lights total. The baked HDR supplies the copper rim;
+          the single cavity point replaces the overlapping colored fills. */}
       <BrainPulseLights active={active} />
     </group>
   )

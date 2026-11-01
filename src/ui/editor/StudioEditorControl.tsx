@@ -96,31 +96,17 @@ const COPY_FIELD_GROUPS: readonly {
     ],
   },
   {
-    title: '当前目标',
-    fields: [
-      { field: 'objectiveLabel', label: '栏目名' },
-      { field: 'objectivePendingTitle', label: '未完成标题' },
-      { field: 'objectivePendingDescription', label: '未完成说明', multiline: true },
-      { field: 'objectiveCompleteTitle', label: '完成后标题' },
-      { field: 'objectiveCompleteDescription', label: '完成后说明', multiline: true },
-    ],
-  },
-  {
     title: '界面提示',
     fields: [
-      { field: 'sanityLabel', label: '理智仪表名称' },
       { field: 'rotateHint', label: '旋转提示' },
       { field: 'zoomHint', label: '缩放提示' },
       { field: 'exploreHint', label: '探索提示' },
       { field: 'resetCameraLabel', label: '镜头按钮' },
-      { field: 'backToStudioLabel', label: '返回按钮' },
-      { field: 'undiscoveredRelicLabel', label: '未收录遗物' },
     ],
   },
   {
     title: '场景悬浮标签',
     fields: [
-      { field: 'terminalCalloutLabel', label: '终局显示器' },
       { field: 'dreamArchiveCalloutLabel', label: '奇思档案书架' },
     ],
   },

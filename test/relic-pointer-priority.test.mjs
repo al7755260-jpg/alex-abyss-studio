@@ -167,22 +167,11 @@ test('改变宿主位置、缩放、角度后仅针对当前命中点让出家�
   }
 })
 
-test('R3F连接稳定事件过滤器，柜门/转动门控保留，镜头与可见光点共用已提交坐标', async () => {
-  const [canvas, relics, cabinet, chair] = await Promise.all([
-    source('src/scene/StudioCanvas.tsx'), source('src/scene/HiddenRelics.tsx'),
-    source('src/scene/InteractiveCabinet.tsx'), source('src/scene/InteractiveChair.tsx'),
-  ])
-  assert.match(canvas, /const studioPointerEvents = \(store: RootStore\) => \(\{[\s\S]{0,160}filter: filterRelicHostProxyIntersections/)
+test('展示站保留子作品点击优先级，移除旧版悬停标签', async () => {
+  const canvas = await source('src/scene/StudioCanvas.tsx')
+  assert.match(canvas, /filter: filterRelicHostProxyIntersections/)
   assert.match(canvas, /events=\{studioPointerEvents\}/)
-  assert.match(relics, /relicActivationProxy: pointerEnabled/)
-  assert.match(relics, /relicHostAssetId: relic\.hostAssetId/)
-  assert.match(relics, /const pointerEnabled = !isFingerprintCasket \|\| fingerprintCasketAccessible/)
-  assert.match(relics, /if \(found\.has\(relic\.id\) \|\| suppressed\.has\(relic\.id\)\) return null/)
-  assert.match(canvas, /suppressedRelicIds=\{chairTurning \? CHAIR_TURNING_SUPPRESSED_RELIC_IDS : undefined\}/)
-  assert.match(cabinet, /cabinetToggleProxy: true,[\s\S]{0,80}relicHostOcclusionProxy: true/)
-  assert.match(chair, /chairTurnProxy: true,[\s\S]{0,80}relicHostOcclusionProxy: true/)
-  assert.match(canvas, /relicHitPositionsRef\.current = resolvedRelicHitPositions/)
-  assert.match(canvas, /hitPositions=\{resolvedRelicHitPositions\}/)
-  assert.match(canvas, /const resolvedHitPosition = relicHitPositionsRef\.current\.get\(relicId\) \?\? \(/)
-  assert.match(canvas, /toTarget: new Vector3\(\.\.\.resolvedHitPosition\)/)
+  assert.doesNotMatch(canvas, /SceneAccentLights|chairTurning/)
+  assert.doesNotMatch(canvas, /<ObjectCalloutOverlay\b|resolvedAccentPositions/)
+  assert.doesNotMatch(canvas, /onOpenRelic|fingerprintCasketAccessible/)
 })

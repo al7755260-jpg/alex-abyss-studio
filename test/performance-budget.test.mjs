@@ -76,22 +76,21 @@ test('首屏可见 GLB 保持在发布体积和三角面预算内', async () => 
 })
 
 test('运行时使用自适应 DPR、单阴影灯和轻量鼠标代理', async () => {
-  const [canvas, lighting, effects, relics, detail, candles, callout, app] = await Promise.all([
+  const [canvas, lighting, effects, relics, detail, candles, app] = await Promise.all([
     source('src/scene/StudioCanvas.tsx'),
     source('src/scene/StudioLighting.tsx'),
     source('src/scene/PostEffects.tsx'),
     source('src/scene/HiddenRelics.tsx'),
     source('src/scene/ArtifactDetailScene.tsx'),
     source('src/scene/CandleSet.tsx'),
-    source('src/scene/ObjectCalloutOverlay.tsx'),
     source('src/App.tsx'),
   ])
 
-  assert.match(canvas, /dpr=\{\[0\.75, 1\.25\]\}/)
+  assert.match(canvas, /dpr=\{\[0\.75, 1\.1\]\}/)
   assert.match(canvas, /performance=\{\{ min: 0\.6, max: 1, debounce: 480 \}\}/)
-  assert.match(canvas, /<AdaptiveDpr \/>/)
+  assert.match(canvas, /<AdaptiveRenderBudget \/>/)
   assert.match(canvas, /frameloop=\{renderPaused \? 'never' : 'always'\}/)
-  assert.match(canvas, /<group visible=\{!detailRelic\} name="persistent-studio-world">/)
+  assert.match(canvas, /<group name="persistent-studio-world">/)
   assert.match(canvas, /function CameraPerformanceRegressor/)
   assert.match(canvas, /performanceState\.regress\(\)/)
   assert.doesNotMatch(canvas, /<OrbitControls[\s\S]{0,500}\bregress\b/)
@@ -103,7 +102,7 @@ test('运行时使用自适应 DPR、单阴影灯和轻量鼠标代理', async (
   assert.match(canvas, /window\.performance\.now\(\) < shadowRefreshUntilRef\.current/)
   assert.doesNotMatch(canvas, /useProgress\.getState\(\)\.active/)
   assert.match(canvas, /name=\{`interaction-proxy:\$\{asset\.id\}`\}/)
-  assert.match(canvas, /onPointerEnter=\{!editingLayout && \(proxyCalloutId \|\| isVintageTelevision\)/)
+  assert.match(canvas, /onPointerEnter=\{!editingLayout && \(isDreamArchiveShelf \|\| isVintageTelevision \|\| isHologramTrigger\)/)
   assert.doesNotMatch(canvas, /interactionTargetsRef|intersectObjects\(/)
   assert.match(canvas, /antialias: false/)
   assert.match(canvas, /toneMappingExposure = studioLighting\.exposure/)
@@ -111,14 +110,14 @@ test('运行时使用自适应 DPR、单阴影灯和轻量鼠标代理', async (
   assert.doesNotMatch(canvas, /<Preload all \/>/)
 
   assert.equal((lighting.match(/\bcastShadow(?=\s|>)/g) ?? []).length, 1)
-  assert.match(lighting, /intensity=\{0\.42 \* globalIntensity \* ambientIntensity\}/)
-  assert.match(lighting, /args=\{\['#4d5b61', '#251516'\]\}[\s\S]{0,100}intensity=\{0\.58 \* globalIntensity \* ambientIntensity\}/)
-  assert.match(lighting, /color="#9f978c"[\s\S]{0,100}intensity=\{0\.56 \* globalIntensity\}/)
+  assert.match(lighting, /intensity=\{0\.12 \* globalIntensity \* ambientIntensity\}/)
+  assert.match(lighting, /args=\{\['#9daeb3', '#352014'\]\}[\s\S]{0,100}intensity=\{0\.22 \* globalIntensity \* ambientIntensity\}/)
+  assert.match(lighting, /name="portrait-cool-fill"[\s\S]{0,100}color="#91b7c7"[\s\S]{0,100}intensity=\{0\.28 \* globalIntensity\}/)
   assert.doesNotMatch(lighting, /shadow-mapSize-(?:width|height)=\{2048\}/)
   assert.match(effects, /blur=\{false\}/)
   assert.match(effects, /levels=\{5\}/)
   assert.equal((effects.match(/resolutionScale=\{0\.5\}/g) ?? []).length, 2)
-  assert.match(effects, /brightness=\{detailMode \? 0\.025 : 0\.03\}/)
+  assert.match(effects, /brightness=\{detailMode \? 0\.025 : 0\.01\}/)
   assert.match(effects, /darkness=\{detailMode \? 0\.22 : 0\.34\}/)
   assert.match(effects, /<Outline/)
   assert.doesNotMatch(effects, /outlineEnabled/)
@@ -147,14 +146,11 @@ test('运行时使用自适应 DPR、单阴影灯和轻量鼠标代理', async (
   assert.equal((candles.match(/<instancedMesh/g) ?? []).length, 2)
   assert.doesNotMatch(candles, /cloneMaterial/)
 
-  assert.match(callout, /window\.setTimeout\(\(\) => setRetainedTarget\(null\), 360\)/)
-  assert.match(callout, /calculatePosition=\{calculateCalloutPosition\}/)
-  assert.doesNotMatch(callout, /calculatePosition=\{\(_, __, size\) => \[/)
 
   assert.match(app, /const studioSceneCopy = useMemo\(/)
   assert.match(app, /studioCopy=\{studioSceneCopy\}/)
   assert.match(
     app,
-    /renderPaused=\{dreamArchiveOpen \|\| grimoireMemoryOpen \|\| televisionTransmissionOpen \|\| mystery\.state\.view\.kind === 'finale'\}/,
+    /renderPaused=\{grimoireMemoryOpen \|\| televisionTransmissionOpen\}/,
   )
 })

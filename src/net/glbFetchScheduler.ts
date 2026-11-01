@@ -78,7 +78,9 @@ const withAssetRevision = (
   const url = new URL(requestUrl(input), baseUrl)
   // A deploy-stable revision refreshes old heavy cached models exactly once;
   // repeat visits still reuse cache and existing animation/PBR query keys.
-  url.searchParams.set('assetRevision', assetRevision)
+  // Refresh only the new texture-free distance meshes on this release.
+  const revision = url.pathname.endsWith('-realtime.glb') ? assetRevision + '-geometry1' : assetRevision
+  url.searchParams.set('assetRevision', revision)
   if (input instanceof Request) return new Request(url, input)
   return input instanceof URL ? url : url.href
 }

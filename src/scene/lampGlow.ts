@@ -1,4 +1,5 @@
 export const LAMP_GLOW_DURATION_SECONDS = 0.96
+export const LAMP_EMISSION_COLOR = '#5ef4e8'
 export const LAMP_GLOBE_MATERIAL_NAME = 'Lamp_Glass_Globe'
 export const LAMP_GLOBE_CENTER = [0.00319, 1.96228, -0.00477] as const
 export const LAMP_GLOBE_RADIUS = 0.2081

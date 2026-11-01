@@ -250,3 +250,14 @@ test('默认资产标签限制长度，并拒绝空 id、重复 id 与非字符�
     /must use a string label/,
   )
 })
+
+test('展示版迁移旧线索默认提示并保留用户自定义文案', () => {
+  const defaults = createDefaultStudioCopy(ASSETS)
+  const storage = createMemoryStorage()
+  storage.entries.set(STUDIO_COPY_STORAGE_KEY, JSON.stringify({ ...defaults, exploreHint: '点击发光线索 探索', brandTitle: '我的作品' }))
+  const restored = loadStudioCopy(storage, defaults)
+  assert.equal(restored.exploreHint, '点击场景作品 浏览')
+  assert.equal(restored.brandTitle, '我的作品')
+  storage.entries.set(STUDIO_COPY_STORAGE_KEY, JSON.stringify({ ...defaults, exploreHint: '看看我的新作品' }))
+  assert.equal(loadStudioCopy(storage, defaults).exploreHint, '看看我的新作品')
+})

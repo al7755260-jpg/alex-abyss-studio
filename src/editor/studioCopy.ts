@@ -1,5 +1,7 @@
 export const STUDIO_COPY_STORAGE_KEY = 'alex-abyss-studio:copy:v1'
 
+// Legacy game fields remain in the saved scene schema for compatibility with existing drafts.
+// They are no longer rendered or exposed by the portfolio editor.
 export const STUDIO_COPY_FIELD_LIMITS = {
   brandTitle: 40,
   brandSubtitle: 64,
@@ -51,7 +53,7 @@ const DEFAULT_COPY_FIELDS: Record<StudioCopyField, string> = {
   sanityLabel: '理智',
   rotateHint: '拖动 旋转',
   zoomHint: '滚轮 缩放',
-  exploreHint: '点击发光线索 探索',
+  exploreHint: '点击场景作品 浏览',
   resetCameraLabel: '镜头归中',
   backToStudioLabel: '返回书房',
   undiscoveredRelicLabel: '未归档',
@@ -161,8 +163,8 @@ export function loadStudioCopy(
         const candidate = stored[field]
         const legacyHash = LEGACY_REMOVED_INTERACTION_COPY_HASHES[field]
         const migratedCandidate = typeof candidate === 'string'
-          && legacyHash !== undefined
-          && copyTextHash(candidate) === legacyHash
+          && ((legacyHash !== undefined && copyTextHash(candidate) === legacyHash)
+            || (field === 'exploreHint' && candidate === '点击发光线索 探索'))
           ? defaults[field]
           : candidate
         return [

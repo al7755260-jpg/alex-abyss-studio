@@ -193,8 +193,8 @@ test('StudioCanvas 为 chair 使用专用代理并在编辑模式恢复布局代
   assert.match(canvas, /import \{ InteractiveChair \} from '\.\/InteractiveChair'/)
   assert.match(canvas, /const isInteractiveChair = asset\.kind === 'chair'/)
   assert.match(canvas, /asset\.kind === 'chair'[\s\S]{0,180}<InteractiveChair/)
-  assert.match(canvas, /<InteractiveChair[\s\S]{0,260}interactive=\{!detailRelic && !editingLayout\}/)
-  assert.match(canvas, /<InteractiveChair[\s\S]{0,900}onTurnComplete=/)
+  assert.match(canvas, /<InteractiveChair[\s\S]{0,260}interactive=\{!editingLayout\}/)
+  assert.doesNotMatch(canvas, /<ObjectCalloutOverlay\b/)
 
   const genericProxy = canvas.indexOf('name={`interaction-proxy:${asset.id}`}')
   assert.ok(genericProxy > 0, 'StudioCanvas must retain its generic edit proxy')
@@ -203,15 +203,7 @@ test('StudioCanvas 为 chair 使用专用代理并在编辑模式恢复布局代
   assert.match(proxyGuard, /isInteractiveChair/)
   assert.match(proxyGuard, /editingLayout/)
 
-  assert.match(
-    canvas,
-    /const INTERACTIVE_CHAIR_RELIC_ID: HiddenRelicId = 'spinal-clasp'/,
-  )
-  assert.match(
-    canvas,
-    /relic\.id === (?:INTERACTIVE_CHAIR_RELIC_ID|'spinal-clasp')[\s\S]{0,180}resolveChairSwivelPoint/,
-  )
-  assert.match(canvas, /resolveChairSwivelPoint[\s\S]{0,220}chairTurnAngle/)
+
 })
 
 test('发布椅子 GLB 保留固定底座、独立转轴、共享材质和性能预算', async () => {

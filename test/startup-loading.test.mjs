@@ -16,13 +16,14 @@ test('模块求值阶段不再发起绕过调度器的 GLB preload', async () =>
   }
 })
 
-test('遗物详情代码仅在打开时加载，独立 Suspense 不阻塞主场景', async () => {
-  const canvas = await source('src/scene/StudioCanvas.tsx')
-  assert.match(canvas, /const ArtifactDetailScene = lazy\(\(\) => import\('\.\/ArtifactDetailScene'\)/)
-  assert.doesNotMatch(canvas, /import \{ ArtifactDetailScene \} from/)
-  assert.match(canvas, /detailRelic \? \(\s*<Suspense fallback=\{null\}>\s*<ArtifactDetailScene/)
-  assert.match(canvas, /<group visible=\{!detailRelic\} name="persistent-studio-world">/)
+test('展示站启动不加载遗物详情与结局组件', async () => {
+  const [canvas, app, hud] = await Promise.all([
+    source('src/scene/StudioCanvas.tsx'), source('src/App.tsx'), source('src/ui/StudioHUD.tsx'),
+  ])
+  assert.doesNotMatch(`${canvas}\n${app}\n${hud}`, /ArtifactDetailScene|ArtifactDetailHUD|FinaleSequence|useRelicMystery|<HiddenRelics/)
+  assert.match(canvas, /<group name="persistent-studio-world">/)
 })
+
 
 test('新增性能标记区分脑壳实际挂载与全部资产下载，不伪装完成进度', async () => {
   const [canvas, loading] = await Promise.all([

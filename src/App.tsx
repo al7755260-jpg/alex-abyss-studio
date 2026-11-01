@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
-import { type HiddenRelicId } from './data/hiddenRelics'
 import { STUDIO_ASSETS, STUDIO_EDITABLE_ASSETS } from './data/studioAssets'
 import publishedScene from './data/publishedScene.json'
+import { FEATURED_PROJECT_URL } from './data/portfolioLinks'
 import { resolveSceneSnapshot, type StudioSceneSnapshot } from './editor/studioSceneSnapshot'
 import {
   isSceneInscriptionId,
@@ -57,15 +57,17 @@ import {
   type StudioTextLayout,
   type StudioTextTransform,
 } from './editor/studioTextLayout'
-import { hasFoundAllRelics } from './game/mysteryState'
-import { useRelicMystery } from './game/useRelicMystery'
-import { StudioCanvas, type StudioCanvasHandle } from './scene/StudioCanvas'
+import type { StudioCanvasHandle } from './scene/StudioCanvas'
 import { StormAtmosphere } from './ui/atmosphere/StormAtmosphere'
-import { GameHUD } from './ui/game/GameHUD'
+import { AbyssVideoBackground } from './ui/atmosphere/AbyssVideoBackground'
+import { StudioHUD } from './ui/StudioHUD'
 import type { StudioEditorSection } from './ui/editor/StudioEditorControl'
 import { StudioEditorLauncher } from './ui/editor/StudioEditorLauncher'
 import { StudioTextLayerProvider } from './ui/editor/StudioTextLayer'
-import { LoadingOverlay } from './ui/LoadingOverlay'
+
+// Let the portfolio and its poster paint while WebGL loads.
+const StudioCanvas = lazy(() => import('./scene/StudioCanvas').then(({ StudioCanvas }) => ({ default: StudioCanvas })))
+const LoadingOverlay = lazy(() => import('./ui/LoadingOverlay').then(({ LoadingOverlay }) => ({ default: LoadingOverlay })))
 
 const DEFAULT_STUDIO_LAYOUT = createDefaultStudioLayout([
   ...STUDIO_EDITABLE_ASSETS,
@@ -108,7 +110,6 @@ const LAYOUT_AUTO_SAVE_DELAY_MS = 180
 const COPY_AUTO_SAVE_DELAY_MS = 240
 const TEXT_LAYOUT_AUTO_SAVE_DELAY_MS = 180
 const LIGHTING_AUTO_SAVE_DELAY_MS = 220
-const DreamArchive = lazy(() => import('./ui/ideas/DreamArchive'))
 const GrimoireMemoryAlbum = lazy(() => import('./ui/grimoire/GrimoireMemoryAlbum'))
 const TelevisionTransmission = lazy(() => import('./ui/television/TelevisionTransmission'))
 const StudioEditorControl = import.meta.env.DEV
@@ -146,9 +147,6 @@ const STUDIO_TEXT_LAYER_LABELS: Record<StudioCopyField, string> = {
 
 export default function App() {
   const studioRef = useRef<StudioCanvasHandle>(null)
-  const mystery = useRelicMystery()
-  const [relicTransitionPhase, setRelicTransitionPhase] = useState<'idle' | 'zoom' | 'reveal'>('idle')
-  const [dreamArchiveOpen, setDreamArchiveOpen] = useState(false)
   const [grimoireMemoryOpen, setGrimoireMemoryOpen] = useState(false)
   const [televisionTransmissionOpen, setTelevisionTransmissionOpen] = useState(false)
   const [editingLayoutRequested, setEditingLayout] = useState(false)
@@ -197,7 +195,6 @@ export default function App() {
   const [savedStudioCopy, setSavedStudioCopy] = useState<StudioCopy>(() => studioCopy)
   const studioSceneCopy = useMemo(() => ({
     assetLabels: studioCopy.assetLabels,
-    terminalCalloutLabel: studioCopy.terminalCalloutLabel,
     dreamArchiveCalloutLabel: studioCopy.dreamArchiveCalloutLabel,
     videoBeyondScreenText: studioCopy.videoBeyondScreenText,
     computerIdeaText: studioCopy.computerIdeaText,
@@ -207,7 +204,6 @@ export default function App() {
     studioCopy.computerIdeaText,
     studioCopy.dreamArchiveCalloutLabel,
     studioCopy.perfectTyrannyText,
-    studioCopy.terminalCalloutLabel,
     studioCopy.videoBeyondScreenText,
   ])
   const [studioLighting, setStudioLighting] = useState<StudioLightingSettings>(() => (
@@ -226,10 +222,6 @@ export default function App() {
   latestTextLayoutRef.current = textEditorState.draft
   const latestLightingRef = useRef<StudioLightingSettings>(studioLighting)
   latestLightingRef.current = studioLighting
-  const openingRelicRef = useRef<HiddenRelicId | null>(null)
-  const revealTimerRef = useRef<number | null>(null)
-  const previousViewKindRef = useRef(mystery.state.view.kind)
-  const finaleReady = hasFoundAllRelics(mystery.state)
   const layoutDirty = !layoutsEqual(editorState.draft, editorState.saved)
   const copyDirty = !studioCopiesEqual(studioCopy, savedStudioCopy)
   const textLayoutDirty = !studioTextLayoutsEqual(textEditorState.draft, textEditorState.saved)
@@ -279,71 +271,35 @@ export default function App() {
     return STUDIO_TEXT_LAYER_LABELS[layerId as StudioCopyField] ?? null
   }, [selectedSceneInscriptionId, studioCopy.assetLabels, textEditorState.selectedLayerId])
 
-  const clearRevealTimer = useCallback(() => {
-    if (revealTimerRef.current === null) return
-    window.clearTimeout(revealTimerRef.current)
-    revealTimerRef.current = null
+  const cancelSceneFocus = useCallback(() => {
+    studioRef.current?.cancelFocus()
   }, [])
 
-  const beginRelicReveal = useCallback(() => {
-    clearRevealTimer()
-    setRelicTransitionPhase('reveal')
-    revealTimerRef.current = window.setTimeout(() => {
-      setRelicTransitionPhase('idle')
-      revealTimerRef.current = null
-    }, 720)
-  }, [clearRevealTimer])
-
-  const cancelRelicOpening = useCallback(() => {
-    openingRelicRef.current = null
-    studioRef.current?.cancelRelicFocus()
-    clearRevealTimer()
-    setRelicTransitionPhase('idle')
-  }, [clearRevealTimer])
-
   const resetCamera = useCallback(() => {
-    cancelRelicOpening()
+    cancelSceneFocus()
     studioRef.current?.resetCamera()
-  }, [cancelRelicOpening])
-
-  const openDreamArchive = useCallback(() => {
-    if (editingLayout) return
-    cancelRelicOpening()
-    document.body.style.cursor = ''
-    setDreamArchiveOpen(true)
-  }, [cancelRelicOpening, editingLayout])
-
-  const closeDreamArchive = useCallback(() => {
-    setDreamArchiveOpen(false)
-    document.body.style.cursor = ''
-    if (mystery.state.view.kind === 'studio') {
-      window.requestAnimationFrame(() => resetCamera())
-    }
-  }, [mystery.state.view.kind, resetCamera])
+  }, [cancelSceneFocus])
 
   const exploreBookcaseDreams = useCallback(() => {
-    if (editingLayout || dreamArchiveOpen || mystery.state.view.kind !== 'studio') return
-    const started = studioRef.current?.focusDreamArchive(openDreamArchive) ?? false
-    if (!started) openDreamArchive()
-  }, [dreamArchiveOpen, editingLayout, mystery.state.view.kind, openDreamArchive])
+    if (editingLayout) return
+    cancelSceneFocus()
+    document.body.style.cursor = ''
+    window.location.assign(FEATURED_PROJECT_URL)
+  }, [cancelSceneFocus, editingLayout])
 
   const openGrimoireMemory = useCallback(() => {
     if (
       editingLayout ||
-      dreamArchiveOpen ||
       grimoireMemoryOpen ||
-      televisionTransmissionOpen ||
-      mystery.state.view.kind !== 'studio'
+      televisionTransmissionOpen
     ) return
-    cancelRelicOpening()
+    cancelSceneFocus()
     document.body.style.cursor = ''
     setGrimoireMemoryOpen(true)
   }, [
-    cancelRelicOpening,
-    dreamArchiveOpen,
+    cancelSceneFocus,
     editingLayout,
     grimoireMemoryOpen,
-    mystery.state.view.kind,
     televisionTransmissionOpen,
   ])
 
@@ -353,41 +309,16 @@ export default function App() {
   }, [])
 
   const openTelevisionTransmission = useCallback(() => {
-    if (editingLayout || mystery.state.view.kind !== 'studio') return
-    cancelRelicOpening()
+    if (editingLayout) return
+    cancelSceneFocus()
     document.body.style.cursor = ''
     setTelevisionTransmissionOpen(true)
-  }, [cancelRelicOpening, editingLayout, mystery.state.view.kind])
+  }, [cancelSceneFocus, editingLayout])
 
   const closeTelevisionTransmission = useCallback(() => {
     setTelevisionTransmissionOpen(false)
     document.body.style.cursor = ''
   }, [])
-
-  const finishRelicOpening = useCallback((relicId: HiddenRelicId) => {
-    if (openingRelicRef.current !== relicId) return
-    openingRelicRef.current = null
-    mystery.actions.openRelic(relicId)
-    beginRelicReveal()
-  }, [beginRelicReveal, mystery.actions])
-
-  const requestOpenRelic = useCallback((relicId: HiddenRelicId) => {
-    if (editingLayout) return
-    if (mystery.state.view.kind === 'relic') {
-      mystery.actions.openRelic(relicId)
-      beginRelicReveal()
-      return
-    }
-    if (mystery.state.view.kind !== 'studio' || openingRelicRef.current) return
-
-    openingRelicRef.current = relicId
-    setRelicTransitionPhase('zoom')
-    const started = studioRef.current?.focusRelic(
-      relicId,
-      () => finishRelicOpening(relicId),
-    ) ?? false
-    if (!started) finishRelicOpening(relicId)
-  }, [beginRelicReveal, editingLayout, finishRelicOpening, mystery.actions, mystery.state.view.kind])
 
   const persistLayoutSnapshot = useCallback((layout: StudioLayout) => {
     if (!import.meta.env.DEV) return false
@@ -553,7 +484,7 @@ export default function App() {
       return
     }
 
-    cancelRelicOpening()
+    cancelSceneFocus()
     setLayoutSaveState('idle')
     setCopySaveState('idle')
     setTextLayoutSaveState('idle')
@@ -562,7 +493,7 @@ export default function App() {
     setLocalFileSaveMessage('')
     setEditingLayout(true)
   }, [
-    cancelRelicOpening,
+    cancelSceneFocus,
     copyDirty,
     editingLayout,
     layoutDirty,
@@ -866,38 +797,7 @@ export default function App() {
     persistTextLayoutSnapshot,
   ])
 
-  useEffect(() => {
-    const previousViewKind = previousViewKindRef.current
-    previousViewKindRef.current = mystery.state.view.kind
-    if (mystery.state.view.kind !== 'studio') return
-    if (previousViewKind === 'studio') return
-    const frame = window.requestAnimationFrame(() => studioRef.current?.resetCamera())
-    return () => window.cancelAnimationFrame(frame)
-  }, [mystery.state.view.kind])
 
-  useEffect(() => {
-    if (mystery.state.view.kind === 'studio') return
-    if (editingLayout && layoutDirty) saveLayout()
-    if (editingLayout && copyDirty) saveCopy()
-    if (editingLayout && textLayoutDirty) saveTextLayout()
-    if (editingLayout && lightingDirty) saveLighting()
-    setEditingLayout(false)
-    dispatchEditor({ type: 'select', assetId: null })
-    dispatchTextEditor({ type: 'select', layerId: null })
-  }, [
-    copyDirty,
-    editingLayout,
-    layoutDirty,
-    lightingDirty,
-    mystery.state.view.kind,
-    saveCopy,
-    saveLayout,
-    saveLighting,
-    saveTextLayout,
-    textLayoutDirty,
-  ])
-
-  useEffect(() => () => clearRevealTimer(), [clearRevealTimer])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -983,10 +883,10 @@ export default function App() {
 
   return (
     <main
-      className={`viewer${editingLayout ? ` viewer--editing viewer--editing-${editorSection}` : ''}${dreamArchiveOpen ? ' viewer--dreaming' : ''}${grimoireMemoryOpen ? ' viewer--grimoire-memory' : ''}${televisionTransmissionOpen ? ' viewer--transmitting' : ''}`}
-      aria-busy={relicTransitionPhase === 'zoom'}
+      className={`viewer${editingLayout ? ` viewer--editing viewer--editing-${editorSection}` : ''}${grimoireMemoryOpen ? ' viewer--grimoire-memory' : ''}${televisionTransmissionOpen ? ' viewer--transmitting' : ''}`}
       onContextMenu={(event) => event.preventDefault()}
     >
+      {!editingLayout && !grimoireMemoryOpen && !televisionTransmissionOpen ? <AbyssVideoBackground /> : null}
       <StudioTextLayerProvider
         active={editingTextTransforms}
         layout={textEditorState.draft}
@@ -998,45 +898,37 @@ export default function App() {
       <div
         className="viewer__canvas"
         aria-label="克苏鲁风格三维工作室"
-        aria-hidden={dreamArchiveOpen || grimoireMemoryOpen || televisionTransmissionOpen}
+        aria-hidden={grimoireMemoryOpen || televisionTransmissionOpen}
       >
-        <StudioCanvas
-          ref={studioRef}
-          view={mystery.state.view}
-          foundRelicIds={mystery.state.foundRelicIds}
-          finaleReady={finaleReady}
-          onOpenRelic={requestOpenRelic}
-          onOpenDreamArchive={exploreBookcaseDreams}
-          onOpenGrimoireAlbum={openGrimoireMemory}
-          onOpenTelevision={openTelevisionTransmission}
-          onOpenFinale={mystery.actions.openFinale}
-          editingLayout={editingLayout}
-          editingTransforms={editingTransforms}
-          studioLayout={editorState.draft}
-          defaultStudioLayout={DEFAULT_STUDIO_LAYOUT}
-          studioCopy={studioSceneCopy}
-          studioTextLayout={textEditorState.draft}
-          studioLighting={studioLighting}
-          selectedAssetId={editorState.selectedAssetId}
-          editorTool={editorState.tool}
-          onSelectAsset={selectEditorAsset}
-          onAssetTransformChange={commitAssetTransform}
-          renderPaused={dreamArchiveOpen || grimoireMemoryOpen || televisionTransmissionOpen || mystery.state.view.kind === 'finale'}
-        />
-        {mystery.state.view.kind === 'studio' &&
-        !editingLayout &&
-        !dreamArchiveOpen &&
+        <Suspense fallback={null}>
+          <StudioCanvas
+            ref={studioRef}
+            onOpenDreamArchive={exploreBookcaseDreams}
+            onOpenGrimoireAlbum={openGrimoireMemory}
+            onOpenTelevision={openTelevisionTransmission}
+            editingLayout={editingLayout}
+            editingTransforms={editingTransforms}
+            studioLayout={editorState.draft}
+            defaultStudioLayout={DEFAULT_STUDIO_LAYOUT}
+            studioCopy={studioSceneCopy}
+            studioTextLayout={textEditorState.draft}
+            studioLighting={studioLighting}
+            selectedAssetId={editorState.selectedAssetId}
+            editorTool={editorState.tool}
+            onSelectAsset={selectEditorAsset}
+            onAssetTransformChange={commitAssetTransform}
+            renderPaused={grimoireMemoryOpen || televisionTransmissionOpen}
+          />
+        </Suspense>
+        {!editingLayout &&
         !grimoireMemoryOpen &&
-        !televisionTransmissionOpen &&
-        relicTransitionPhase === 'idle' ? (
+        !televisionTransmissionOpen ? (
           <StormAtmosphere />
         ) : null}
       </div>
 
-      <GameHUD
-        mystery={mystery}
+      <StudioHUD
         copy={studioCopy}
-        onOpenRelic={requestOpenRelic}
         editingLayout={editingTransforms}
         editorControl={import.meta.env.DEV && StudioEditorControl && StudioSceneExport
           ? editingLayout ? (
@@ -1127,14 +1019,7 @@ export default function App() {
         onResetCamera={resetCamera}
       />
 
-      <LoadingOverlay />
-      {dreamArchiveOpen ? (
-        <Suspense fallback={null}>
-          <DreamArchive
-            onClose={closeDreamArchive}
-          />
-        </Suspense>
-      ) : null}
+      <Suspense fallback={null}><LoadingOverlay /></Suspense>
       {grimoireMemoryOpen ? (
         <Suspense fallback={null}>
           <GrimoireMemoryAlbum onClose={closeGrimoireMemory} />
@@ -1145,13 +1030,6 @@ export default function App() {
           <TelevisionTransmission onClose={closeTelevisionTransmission} />
         </Suspense>
       ) : null}
-      <div
-        className={`relic-transition relic-transition--${relicTransitionPhase}`}
-        aria-hidden="true"
-      >
-        <span className="relic-transition__iris" />
-        <span className="relic-transition__grain" />
-      </div>
       </StudioTextLayerProvider>
     </main>
   )

@@ -107,7 +107,7 @@ test('第二句在头腔墙体层独立注册为可选的三维布局对象', as
   assert.ok(mountStart >= 0 && mountEnd > mountStart)
   assert.match(
     canvas,
-    /<BrainStudioShell \/>[\s\S]{0,120}<CameraIntroReady[\s\S]{0,120}<\/Suspense>\s*<Suspense fallback=\{null\}>\s*<VideoBeyondScreenInscription/,
+    /<BrainStudioShell \/>[\s\S]{0,120}<CameraIntroReady[\s\S]{0,120}<\/Suspense>\s*\{editingLayout \? <Suspense fallback=\{null\}>\s*<VideoBeyondScreenInscription/,
   )
   assert.equal((canvas.match(/<VideoBeyondScreenInscription\b/g) ?? []).length, 1)
   assert.match(mount, /ref=\{getEditableGroupRef\(VIDEO_BEYOND_SCREEN_INSCRIPTION_ID\)\}/)

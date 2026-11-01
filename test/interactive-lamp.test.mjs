@@ -370,63 +370,22 @@ test('灯效 useFrame 只推进控制器并直接更新真实球壳材质，不�
   }
 })
 
-test('灯球使用带晶核孔洞的专属代理，编辑模式恢复通用布局代理', async () => {
-  const [component, canvas, relics, relicData] = await Promise.all([
+test('灯球完整点击区域控制灯光，编辑模式恢复布局代理', async () => {
+  const [component, canvas] = await Promise.all([
     source('../src/scene/InteractiveTentacleLamp.tsx'),
     source('../src/scene/StudioCanvas.tsx'),
-    source('../src/scene/HiddenRelics.tsx'),
-    source('../src/data/hiddenRelics.ts'),
   ])
-
-  assert.match(component, /const lampGlobeRaycast: Mesh\['raycast'\]/)
-  assert.match(component, /raycaster\.ray\.distanceSqToPoint\(lampRaycastSphere\.center\)/)
-  assert.match(component, /LAMP_RELIC_APERTURE_CENTER\[0\] - LAMP_GLOBE_CENTER\[0\]/)
-  assert.match(component, /this\.localToWorld\(lampRaycastAperturePoint\)/)
-  assert.match(component, /raycaster\.ray\.distanceSqToPoint\(lampRaycastAperturePoint\)/)
-  assert.match(
-    component,
-    /if \(!isLampGlobeRayAllowed\(apertureDistance, globeCenterDistance\)\) return/,
-  )
   assert.match(component, /raycaster\.ray\.intersectSphere\(lampRaycastSphere, lampRaycastPoint\)/)
-  assert.match(component, /name=\{`lamp-globe-interaction-proxy:\$\{asset\.id\}`\}/)
+  assert.doesNotMatch(component, /lampRaycastAperture|isLampGlobeRayAllowed/)
   assert.match(component, /raycast=\{lampGlobeRaycast\}/)
-  assert.match(component, /\{interactive \? \(\s*<mesh/)
-  assert.match(component, /if \(!interactive \|\| event\.button !== 0 \|\| event\.delta > 8\) return/)
   assert.match(component, /controller\.toggle\(\)/)
-  assert.match(component, /document\.body\.style\.cursor = 'pointer'/)
-
-  assert.match(canvas, /import \{ InteractiveTentacleLamp \} from '\.\/InteractiveTentacleLamp'/)
-  assert.match(canvas, /const isInteractiveLamp = asset\.kind === 'lamp'/)
-  assert.match(canvas, /asset\.kind === 'lamp'[\s\S]{0,120}<InteractiveTentacleLamp/)
-  assert.match(
-    canvas,
-    /<InteractiveTentacleLamp[\s\S]{0,180}interactive=\{!detailRelic && !editingLayout\}/,
-  )
-
+  assert.match(component, /if \(!interactive \|\| event\.button !== 0 \|\| event\.delta > 8\) return/)
+  assert.match(canvas, /<InteractiveTentacleLamp[\s\S]{0,180}interactive=\{!editingLayout\}/)
   const genericProxy = canvas.indexOf('name={`interaction-proxy:${asset.id}`}')
-  assert.ok(genericProxy > 0, 'StudioCanvas must retain its generic edit proxy')
-  const proxyGuard = canvas.slice(Math.max(0, genericProxy - 700), genericProxy)
-  assert.match(proxyGuard, /!isInteractiveLamp/)
-  assert.match(proxyGuard, /editingLayout/)
-
-  assert.match(relics, /const isDrownedDreamCore = relic\.id === 'drowned-dream-core'/)
-  assert.match(
-    relics,
-    /isDrownedDreamCore[\s\S]{0,120}\? lampRelicWorldRadius \/ relic\.hitRadius/,
-  )
-  assert.match(relics, /if \(found\.has\(relic\.id\) \|\| suppressed\.has\(relic\.id\)\) return null/)
-  assert.match(relics, /event\.stopPropagation\(\)[\s\S]{0,80}onOpenRelic\(relic\.id\)/)
-  assert.match(
-    relicData,
-    /id: 'drowned-dream-core'[\s\S]{0,1200}hitRadius: 0\.3/,
-  )
-
-  const suppressionDeclaration = canvas.match(
-    /const CHAIR_TURNING_SUPPRESSED_RELIC_IDS = \[([^\]]*)\]/,
-  )
-  assert.ok(suppressionDeclaration, 'missing transient chair relic suppression')
-  assert.doesNotMatch(suppressionDeclaration[1], /drowned-dream-core/)
+  assert.ok(genericProxy > 0)
+  assert.match(canvas.slice(genericProxy - 700, genericProxy), /!isInteractiveLamp/)
 })
+
 
 test('真实灯球发光只附加一个无阴影点光，不重建任何可见球体', async () => {
   const component = await source('../src/scene/InteractiveTentacleLamp.tsx')

@@ -9,14 +9,14 @@ import {
 
 const source = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8')
 
-test('正常探索模式有六件家具与一个终局显示器 callout 目标', () => {
+test('历史遗物配置保留六件家具与一个终局显示器目标', () => {
   assert.equal(HIDDEN_RELICS.length, 6)
   assert.equal(new Set(HIDDEN_RELICS.map(({ hostAssetId }) => hostAssetId)).size, 6)
   assert.equal(new Set(HIDDEN_RELICS.map(({ hostLabel }) => hostLabel)).size, 6)
   assert.equal(FINAL_MONITOR_TARGET.id, 'final-monitor')
 })
 
-test('callout 使用单实例 DOM/SVG 覆盖层跟随 3D 投影且不拦截场景操作', async () => {
+test('callout 使用单实例无引导线 DOM 覆盖层跟随 3D 投影且不拦截场景操作', async () => {
   const overlay = await source('src/scene/ObjectCalloutOverlay.tsx')
 
   assert.match(overlay, /<Html[\s\S]{0,220}fullscreen/)
@@ -28,32 +28,19 @@ test('callout 使用单实例 DOM/SVG 覆盖层跟随 3D 投影且不拦截场�
   assert.match(overlay, /\.project\(camera\)/)
   assert.match(overlay, /MathUtils\.lerp/)
   assert.match(overlay, /panel\.style\.setProperty\('--callout-panel-x'/)
-  assert.match(overlay, /const pathValue = `M \$\{smoothed\.x[\s\S]{0,180} L \$\{connectionX/)
   assert.match(overlay, /!displayedTarget \|\| !target\) return/)
-  assert.match(overlay, /if \(rendered\.path !== pathValue\)/)
   assert.match(overlay, /if \(rendered\.panelX !== panelXValue\)/)
-  assert.doesNotMatch(overlay, /elbow|<circle/)
+  assert.doesNotMatch(overlay, /<svg|<path|object-callout__linework|object-callout__anchor/)
   assert.match(overlay, /window\.setTimeout\(\(\) => setRetainedTarget\(null\), 360\)/)
 })
 
-test('鼠标悬停统一驱动宿主家具、指纹匣与终局显示器标注', async () => {
-  const [canvas, relics] = await Promise.all([
-    source('src/scene/StudioCanvas.tsx'),
-    source('src/scene/HiddenRelics.tsx'),
-  ])
+test('遗物内部鼠标代理保留悬停隔离', async () => {
+  const relics = await source('src/scene/HiddenRelics.tsx')
 
-  assert.match(canvas, /const activeCalloutTarget = calloutTargetById\.get\([\s\S]{0,80}hoveredCalloutId \?\? ''/)
-  assert.match(canvas, /proxyCalloutId[\s\S]{0,120}hostRelic\?\.id/)
-  assert.match(canvas, /onPointerEnter=\{!editingLayout && \(proxyCalloutId \|\| isVintageTelevision\) \? \(event\) => \{/)
-  assert.match(canvas, /if \(proxyCalloutId\) setHoveredCalloutId\(proxyCalloutId\)/)
-  assert.match(canvas, /DREAM_ARCHIVE_SHELF_CALLOUT_ID[\s\S]{0,420}label: studioCopy\.dreamArchiveCalloutLabel/)
-  assert.match(canvas, /label: studioCopy\.assetLabels\[relic\.hostAssetId\] \?\? relic\.hostLabel/)
-  assert.match(canvas, /onHoverChange=\{\(hovered\) => \{[\s\S]{0,180}setHoveredCalloutId/)
-  assert.match(canvas, /onHoverChange=\{\(hovered\) => \{[\s\S]{0,120}FINAL_MONITOR_TARGET\.id/)
   assert.match(relics, /const pointerEnabled = !isFingerprintCasket \|\| fingerprintCasketAccessible/)
   assert.match(relics, /onPointerEnter=\{pointerEnabled \? \(event\) => \{[\s\S]{0,80}event\.stopPropagation\(\)[\s\S]{0,120}onHoverRelic\?\.\(relic\.id\)/)
   assert.match(relics, /onHoverChange\?\.\(true\)/)
-  assert.doesNotMatch(`${canvas}\n${relics}`, /faceFocused|interactionTargetsRef|mysteryTargetKind/)
+  assert.doesNotMatch(relics, /faceFocused|interactionTargetsRef|mysteryTargetKind/)
 })
 
 test('callout 铭牌采用紧凑哥特字体、视口避让、移动端与弱动效样式', async () => {

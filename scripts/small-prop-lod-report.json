@@ -1,0 +1,452 @@
+{
+  "parameters": {
+    "ratio": 0.15,
+    "error": 0.01,
+    "normalWeight": 0.25,
+    "uvWeight": 1,
+    "flags": [
+      "Permissive"
+    ]
+  },
+  "totalInstancedTriangles": {
+    "original": 797988,
+    "realtime": 141663,
+    "saved": 656325
+  },
+  "reports": [
+    {
+      "name": "candles/blood-red-pillar-candle",
+      "instances": 7,
+      "sourceSha256": "c1ba1d1155e210f6fac5bdd94379461a2a46e363bd7bdc7539cad406c8cf2129",
+      "parameters": {
+        "ratio": 0.15,
+        "error": 0.01,
+        "normalWeight": 0.25,
+        "uvWeight": 1,
+        "flags": [
+          "Permissive"
+        ]
+      },
+      "measuredErrors": [
+        0.007744832430034876
+      ],
+      "originalTriangles": 52092,
+      "realtimeTriangles": 7813,
+      "reductionPercent": 85.002,
+      "originalBytes": 1194768,
+      "realtimeBytes": 97596,
+      "originalBounds": {
+        "min": [
+          -0.05475569699024736,
+          -0.05999999865889549,
+          -0.055162204756655654
+        ],
+        "max": [
+          0.05491683695170298,
+          0.05999999865889549,
+          0.055169528975241945
+        ]
+      },
+      "realtimeBounds": {
+        "min": [
+          -0.05475569699024736,
+          -0.05999999865889549,
+          -0.055162204756655654
+        ],
+        "max": [
+          0.05491683695170298,
+          0.05999999865889549,
+          0.055169528975241945
+        ]
+      },
+      "boundsAxisDelta": [
+        0,
+        0,
+        0
+      ],
+      "maxBoundsDeltaPercent": 0,
+      "verified": {
+        "sourceUntouched": true,
+        "uvAttributes": true,
+        "survivingFullVertexAttributeTuplesUnchanged": true,
+        "everyVertexReferenced": true,
+        "boundsFromReferencedIndices": true,
+        "noDuplicateTextures": true,
+        "materialSlots": true,
+        "transforms": true
+      }
+    },
+    {
+      "name": "candles/black-wax-skull-goblet-candle",
+      "instances": 1,
+      "sourceSha256": "b2018ca10851405c7d9cd896afc82b058104ed024c5d7d7ae5168b8a4e350209",
+      "parameters": {
+        "ratio": 0.15,
+        "error": 0.01,
+        "normalWeight": 0.25,
+        "uvWeight": 1,
+        "flags": [
+          "Permissive"
+        ]
+      },
+      "measuredErrors": [
+        0.009956113994121552
+      ],
+      "originalTriangles": 34348,
+      "realtimeTriangles": 6340,
+      "reductionPercent": 81.542,
+      "originalBytes": 889388,
+      "realtimeBytes": 99044,
+      "originalBounds": {
+        "min": [
+          -0.06682790599448471,
+          -0.1899999976158142,
+          -0.07909756597442434
+        ],
+        "max": [
+          0.06724539778287839,
+          0.1899999976158142,
+          0.07905117925625642
+        ]
+      },
+      "realtimeBounds": {
+        "min": [
+          -0.06682790599448471,
+          -0.1899999976158142,
+          -0.07909756597442434
+        ],
+        "max": [
+          0.06724539778287839,
+          0.1899999976158142,
+          0.07905117925625642
+        ]
+      },
+      "boundsAxisDelta": [
+        0,
+        0,
+        0
+      ],
+      "maxBoundsDeltaPercent": 0,
+      "verified": {
+        "sourceUntouched": true,
+        "uvAttributes": true,
+        "survivingFullVertexAttributeTuplesUnchanged": true,
+        "everyVertexReferenced": true,
+        "boundsFromReferencedIndices": true,
+        "noDuplicateTextures": true,
+        "materialSlots": true,
+        "transforms": true
+      }
+    },
+    {
+      "name": "candles/staggered-seven-candle-cluster",
+      "instances": 1,
+      "sourceSha256": "3c8a2d323a34504c540e7666039956660a02ea284f2697a24b1dff28c397faa2",
+      "parameters": {
+        "ratio": 0.15,
+        "error": 0.01,
+        "normalWeight": 0.25,
+        "uvWeight": 1,
+        "flags": [
+          "Permissive"
+        ]
+      },
+      "measuredErrors": [
+        0.009952515363693237
+      ],
+      "originalTriangles": 41600,
+      "realtimeTriangles": 9986,
+      "reductionPercent": 75.995,
+      "originalBytes": 829616,
+      "realtimeBytes": 134976,
+      "originalBounds": {
+        "min": [
+          -0.15980709547103977,
+          -0.14623579212444274,
+          -0.15998297363624422
+        ],
+        "max": [
+          0.15988524075466337,
+          0.14625532844534864,
+          0.15963131032071884
+        ]
+      },
+      "realtimeBounds": {
+        "min": [
+          -0.15980709547103977,
+          -0.14623579212444274,
+          -0.15998297363624422
+        ],
+        "max": [
+          0.15988524075466337,
+          0.14625532844534864,
+          0.15963131032071884
+        ]
+      },
+      "boundsAxisDelta": [
+        0,
+        0,
+        0
+      ],
+      "maxBoundsDeltaPercent": 0,
+      "verified": {
+        "sourceUntouched": true,
+        "uvAttributes": true,
+        "survivingFullVertexAttributeTuplesUnchanged": true,
+        "everyVertexReferenced": true,
+        "boundsFromReferencedIndices": true,
+        "noDuplicateTextures": true,
+        "materialSlots": true,
+        "transforms": true
+      }
+    },
+    {
+      "name": "display-skulls/cyclopean-tide-grazer-skull",
+      "instances": 1,
+      "sourceSha256": "87f750f2b5e75a04a96fc45c18b61406032e4a56f7bb952c766e0873e628260b",
+      "parameters": {
+        "ratio": 0.15,
+        "error": 0.01,
+        "normalWeight": 0.25,
+        "uvWeight": 1,
+        "flags": [
+          "Permissive"
+        ]
+      },
+      "measuredErrors": [
+        0.009952238760888577
+      ],
+      "originalTriangles": 55864,
+      "realtimeTriangles": 13420,
+      "reductionPercent": 75.977,
+      "originalBytes": 1077972,
+      "realtimeBytes": 188180,
+      "originalBounds": {
+        "min": [
+          -0.19753658602530777,
+          -0.17372785634196516,
+          -0.17278424568971576
+        ],
+        "max": [
+          0.19821889698505402,
+          0.17424758300284923,
+          0.17234081693490924
+        ]
+      },
+      "realtimeBounds": {
+        "min": [
+          -0.19753658602530777,
+          -0.17372785634196516,
+          -0.17278424568971576
+        ],
+        "max": [
+          0.19821889698505402,
+          0.17424758300284923,
+          0.17234081693490924
+        ]
+      },
+      "boundsAxisDelta": [
+        0,
+        0,
+        0
+      ],
+      "maxBoundsDeltaPercent": 0,
+      "verified": {
+        "sourceUntouched": true,
+        "uvAttributes": true,
+        "survivingFullVertexAttributeTuplesUnchanged": true,
+        "everyVertexReferenced": true,
+        "boundsFromReferencedIndices": true,
+        "noDuplicateTextures": true,
+        "materialSlots": true,
+        "transforms": true
+      }
+    },
+    {
+      "name": "display-skulls/spiral-antler-oracle-skull",
+      "instances": 1,
+      "sourceSha256": "31bf3dcf90fc7b2287846a91e47f648bbeebb9efece534211b8f4b30604a31d3",
+      "parameters": {
+        "ratio": 0.15,
+        "error": 0.01,
+        "normalWeight": 0.25,
+        "uvWeight": 1,
+        "flags": [
+          "Permissive"
+        ]
+      },
+      "measuredErrors": [
+        0.009955784305930138
+      ],
+      "originalTriangles": 165502,
+      "realtimeTriangles": 29348,
+      "reductionPercent": 82.267,
+      "originalBytes": 2876540,
+      "realtimeBytes": 397028,
+      "originalBounds": {
+        "min": [
+          -0.1890941148379781,
+          -0.1644003482485208,
+          -0.18912718222290612
+        ],
+        "max": [
+          0.18999448037373767,
+          0.16406134512151072,
+          0.1894986442334012
+        ]
+      },
+      "realtimeBounds": {
+        "min": [
+          -0.1890941148379781,
+          -0.1644003482485208,
+          -0.18912718222290612
+        ],
+        "max": [
+          0.18999448037373767,
+          0.16406134512151072,
+          0.1894986442334012
+        ]
+      },
+      "boundsAxisDelta": [
+        0,
+        0,
+        0
+      ],
+      "maxBoundsDeltaPercent": 0,
+      "verified": {
+        "sourceUntouched": true,
+        "uvAttributes": true,
+        "survivingFullVertexAttributeTuplesUnchanged": true,
+        "everyVertexReferenced": true,
+        "boundsFromReferencedIndices": true,
+        "noDuplicateTextures": true,
+        "materialSlots": true,
+        "transforms": true
+      }
+    },
+    {
+      "name": "display-skulls/chitin-maw-brood-skull",
+      "instances": 1,
+      "sourceSha256": "3bb18252debe71de5c0b78379abaf06c934588ba02fea23d45f11e43eb366ffd",
+      "parameters": {
+        "ratio": 0.15,
+        "error": 0.01,
+        "normalWeight": 0.25,
+        "uvWeight": 1,
+        "flags": [
+          "Permissive"
+        ]
+      },
+      "measuredErrors": [
+        0.009957307949662209
+      ],
+      "originalTriangles": 48320,
+      "realtimeTriangles": 11576,
+      "reductionPercent": 76.043,
+      "originalBytes": 1013872,
+      "realtimeBytes": 162712,
+      "originalBounds": {
+        "min": [
+          -0.13902232328891231,
+          -0.12122066324855221,
+          -0.1423109769821167
+        ],
+        "max": [
+          0.1394735602521844,
+          0.1216719300141467,
+          0.14222878217697144
+        ]
+      },
+      "realtimeBounds": {
+        "min": [
+          -0.13902232328891231,
+          -0.12122066324855221,
+          -0.1423109769821167
+        ],
+        "max": [
+          0.1394735602521844,
+          0.1216719300141467,
+          0.14222878217697144
+        ]
+      },
+      "boundsAxisDelta": [
+        0,
+        0,
+        0
+      ],
+      "maxBoundsDeltaPercent": 0,
+      "verified": {
+        "sourceUntouched": true,
+        "uvAttributes": true,
+        "survivingFullVertexAttributeTuplesUnchanged": true,
+        "everyVertexReferenced": true,
+        "boundsFromReferencedIndices": true,
+        "noDuplicateTextures": true,
+        "materialSlots": true,
+        "transforms": true
+      }
+    },
+    {
+      "name": "display-skulls/star-devourer-leviathan-skull",
+      "instances": 1,
+      "sourceSha256": "15e4e633e9ff232626b58f10453393d0a72fb44a158b717fcca1d517303b36e1",
+      "parameters": {
+        "ratio": 0.15,
+        "error": 0.01,
+        "normalWeight": 0.25,
+        "uvWeight": 1,
+        "flags": [
+          "Permissive"
+        ]
+      },
+      "measuredErrors": [
+        0.00995832122862339
+      ],
+      "originalTriangles": 87710,
+      "realtimeTriangles": 16302,
+      "reductionPercent": 81.414,
+      "originalBytes": 1603940,
+      "realtimeBytes": 238132,
+      "originalBounds": {
+        "min": [
+          -0.1742222689707562,
+          -0.1150714367301232,
+          -0.18859639247373616
+        ],
+        "max": [
+          0.1736378905096192,
+          0.1150714367301232,
+          0.18834510181157293
+        ]
+      },
+      "realtimeBounds": {
+        "min": [
+          -0.1742222689707562,
+          -0.1150714367301232,
+          -0.18859639247373616
+        ],
+        "max": [
+          0.1736378905096192,
+          0.1150714367301232,
+          0.18834510181157293
+        ]
+      },
+      "boundsAxisDelta": [
+        0,
+        0,
+        0
+      ],
+      "maxBoundsDeltaPercent": 0,
+      "verified": {
+        "sourceUntouched": true,
+        "uvAttributes": true,
+        "survivingFullVertexAttributeTuplesUnchanged": true,
+        "everyVertexReferenced": true,
+        "boundsFromReferencedIndices": true,
+        "noDuplicateTextures": true,
+        "materialSlots": true,
+        "transforms": true
+      }
+    }
+  ]
+}

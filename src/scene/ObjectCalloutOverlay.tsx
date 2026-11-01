@@ -53,10 +53,6 @@ function calculateCalloutPosition(
   return calloutScreenCenter
 }
 
-function setPath(path: SVGPathElement | null, value: string) {
-  path?.setAttribute('d', value)
-}
-
 export function ObjectCalloutOverlay({
   target,
 }: {
@@ -65,15 +61,10 @@ export function ObjectCalloutOverlay({
   const [retainedTarget, setRetainedTarget] = useState<ObjectCalloutTarget | null>(target)
   const rootRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
-  const anchorRef = useRef<HTMLSpanElement>(null)
-  const auraPathRef = useRef<SVGPathElement>(null)
-  const mainPathRef = useRef<SVGPathElement>(null)
-  const tracerPathRef = useRef<SVGPathElement>(null)
   const smoothedRef = useRef({ id: '', x: 0, y: 0 })
   const renderedRef = useRef({
+    panel: null as HTMLDivElement | null,
     projected: '',
-    path: '',
-    anchorTransform: '',
     panelX: '',
     panelY: '',
     panelWidth: '',
@@ -96,8 +87,7 @@ export function ObjectCalloutOverlay({
   useFrame(({ camera, size }, delta) => {
     const root = rootRef.current
     const panel = panelRef.current
-    const anchor = anchorRef.current
-    if (!root || !panel || !anchor || !displayedTarget || !target) return
+    if (!root || !panel || !displayedTarget || !target) return
 
     projectedPosition
       .set(...displayedTarget.position)
@@ -112,6 +102,16 @@ export function ObjectCalloutOverlay({
       rawY >= -28 && rawY <= size.height + 28
 
     const rendered = renderedRef.current
+    // A newly mounted label needs fresh DOM values, even at the same coordinates.
+    if (rendered.panel !== panel) {
+      rendered.panel = panel
+      rendered.projected = ''
+      rendered.panelX = ''
+      rendered.panelY = ''
+      rendered.panelWidth = ''
+      rendered.panelHeight = ''
+      rendered.side = ''
+    }
     const projectedValue = insideViewport ? 'true' : 'false'
     if (rendered.projected !== projectedValue) {
       rendered.projected = projectedValue
@@ -165,23 +165,6 @@ export function ObjectCalloutOverlay({
       safeTop,
       Math.max(safeTop, size.height - safeBottom - panelHeight),
     )
-    const connectionX = side === 'right' ? panelX : panelX + panelWidth
-    const connectionY = panelY + panelHeight * 0.5
-    const pathValue = `M ${smoothed.x.toFixed(2)} ${smoothed.y.toFixed(2)} L ${connectionX.toFixed(2)} ${connectionY.toFixed(2)}`
-
-    if (rendered.path !== pathValue) {
-      rendered.path = pathValue
-      setPath(auraPathRef.current, pathValue)
-      setPath(mainPathRef.current, pathValue)
-      setPath(tracerPathRef.current, pathValue)
-    }
-
-    const anchorTransform = `translate3d(${smoothed.x.toFixed(2)}px, ${smoothed.y.toFixed(2)}px, 0) rotate(45deg)`
-    if (rendered.anchorTransform !== anchorTransform) {
-      rendered.anchorTransform = anchorTransform
-      anchor.style.transform = anchorTransform
-    }
-
     const panelXValue = `${panelX.toFixed(2)}px`
     const panelYValue = `${panelY.toFixed(2)}px`
     const panelWidthValue = `${panelWidth.toFixed(2)}px`
@@ -225,21 +208,7 @@ export function ObjectCalloutOverlay({
         aria-hidden={!target}
         style={{ '--callout-accent': displayedTarget.accent } as CSSProperties}
       >
-        <svg
-          className="object-callout__linework"
-          width="100%"
-          height="100%"
-          aria-hidden="true"
-        >
-          <g key={displayedTarget.id}>
-            <path ref={auraPathRef} className="object-callout__path object-callout__path--aura" pathLength="1" />
-            <path ref={mainPathRef} className="object-callout__path object-callout__path--main" pathLength="1" />
-            <path ref={tracerPathRef} className="object-callout__path object-callout__path--tracer" pathLength="1" />
-          </g>
-        </svg>
-
-        <span ref={anchorRef} className="object-callout__anchor" aria-hidden="true" />
-
+        {/* Keep labels only: connector lines and endpoint markers are intentionally absent. */}
         <div
           key={`panel:${displayedTarget.id}`}
           ref={panelRef}

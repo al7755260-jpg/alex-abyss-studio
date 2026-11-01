@@ -10,6 +10,15 @@ import { Box3, Mesh, Vector3, type Object3D } from 'three'
 import type { StudioAsset } from '../data/studioAssets'
 import { PlaceholderAsset } from './PlaceholderAsset'
 import { VintageTelevisionStatic } from './VintageTelevisionStatic'
+import { useSmallPropLod } from './useSmallPropLod'
+
+// Moving/fracturing assets retain their original topology at every distance.
+const REALTIME_ASSET_IDS = new Set([
+  'abyssal-desk', 'watching-monitor', 'reliquary-computer', 'eldritch-keyboard',
+  'forbidden-bookcase', 'floor-left-candelabra', 'demonic-display-rack',
+  'cthulhu-wall-mask', 'tentacle-lamp', 'mechanical-cthulhu-octopus',
+  'vintage-television',
+])
 
 type AssetSlotProps = {
   asset: StudioAsset
@@ -77,6 +86,11 @@ function LoadedGlb({ asset, configureObject }: AssetSlotProps) {
       offset: [-center.x, -bounds.min.y, -center.z] as [number, number, number],
     }
   }, [asset, configureObject, gltf.scene])
+
+  const realtimeUrl = REALTIME_ASSET_IDS.has(asset.id) && /-optimized\.glb(?=\?|$)/.test(asset.src!)
+    ? asset.src!.replace(/-optimized\.glb(?=\?|$)/, '-realtime.glb')
+    : null
+  useSmallPropLod(prepared.object, realtimeUrl)
 
   return (
     <group scale={prepared.uniformScale}>

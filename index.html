@@ -4,14 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#030506" />
+    <link rel="preload" as="image" href="%BASE_URL%images/abyss-home-mobile.webp" media="(max-width: 720px)" fetchpriority="high" />
+    <link rel="preload" as="image" href="%BASE_URL%images/abyss-home.webp" media="(width > 720px)" fetchpriority="high" />
+    <link rel="icon" href="data:," />
     <meta
       name="description"
-      content="ALEX的深渊工作室：寻找六件 LUX3D 吞噬遗物并揭开 AI 克苏鲁真相"
+      content="AlexLi的奇怪脑洞：交互式 3D 创意工作室，展示个人作品与客户合作。"
     />
     <title>ALEX的深渊工作室 · 3D 查看器</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main class="viewer">
+        <div class="abyss-home"></div>
+        <div class="loading" role="status">正在载入工作室…</div>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

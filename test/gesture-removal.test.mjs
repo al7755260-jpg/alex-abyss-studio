@@ -61,26 +61,10 @@ test('梦境档案保留鼠标点击、Esc 返回与 Tab 焦点循环', async ()
   assert.match(archive, /鼠标点击选择 · Esc 返回上一层 · Tab 切换控件/)
 })
 
-test('六件遗物都保留鼠标入口，指纹匣由柜门开启状态显式解锁', async () => {
-  const [relics, canvas, cabinet] = await Promise.all([
-    source('src/scene/HiddenRelics.tsx'),
-    source('src/scene/StudioCanvas.tsx'),
-    source('src/scene/InteractiveCabinet.tsx'),
-  ])
-
-  assert.equal(HIDDEN_RELICS.length, 6)
-  assert.equal(new Set(HIDDEN_RELICS.map(({ id }) => id)).size, 6)
-  assert.match(relics, /\{HIDDEN_RELICS\.map\(\(relic\) => \{/)
-  assert.match(relics, /onClick=\{pointerEnabled \? \(event\) => \{[\s\S]{0,120}onOpenRelic\(relic\.id\)/)
-  assert.match(relics, /onPointerEnter=\{pointerEnabled \? \(event\) =>/)
-  assert.match(relics, /onPointerLeave=\{pointerEnabled \? \(event\) =>/)
-  assert.match(relics, /const isFingerprintCasket = relic\.id === 'fingerprint-casket'/)
-  assert.match(relics, /const pointerEnabled = !isFingerprintCasket \|\| fingerprintCasketAccessible/)
-  assert.match(relics, /raycast=\{pointerEnabled \? relicProxyRaycast : ignoreRaycast\}/)
-
-  assert.match(cabinet, /onClick=\{handleClick\}/)
-  assert.match(cabinet, /if \(!controller\.toggle\(\)\) return/)
-  assert.match(canvas, /const \[cabinetDoorOpen, setCabinetDoorOpen\] = useState\(false\)/)
-  assert.match(canvas, /onDoorOpenChange=\{setCabinetDoorOpen\}/)
-  assert.match(canvas, /fingerprintCasketAccessible=\{cabinetDoorOpen\}/)
+test('展示站不再挂载遗物入口，但保留家具鼠标交互', async () => {
+  const canvas = await readFile(new URL('../src/scene/StudioCanvas.tsx', import.meta.url), 'utf8')
+  assert.doesNotMatch(canvas, /HiddenRelics|FinalMonitorTarget|onOpenRelic/)
+  assert.match(canvas, /<InteractiveCabinet/)
+  assert.match(canvas, /<InteractiveChair/)
+  assert.doesNotMatch(canvas, /SceneAccentLights/)
 })

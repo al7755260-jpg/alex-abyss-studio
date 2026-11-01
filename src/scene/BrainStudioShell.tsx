@@ -1,8 +1,11 @@
 import { useGLTF } from '@react-three/drei'
 import { useMemo } from 'react'
 import { Box3, Mesh, Vector3 } from 'three'
+import { useSmallPropLod } from './useSmallPropLod'
+import { HEAD_PATH } from '../data/headDelivery'
 
-const MODEL_URL = `${import.meta.env.BASE_URL}models/environment/alex-mechanical-open-head-optimized.glb`
+const MODEL_URL = `${import.meta.env.BASE_URL}${HEAD_PATH}`
+const REALTIME_MODEL_URL = `${import.meta.env.BASE_URL}models/environment/alex-mechanical-open-head-realtime.glb`
 
 // The supplied LUX3D head is intentionally kept at its native aspect ratio.
 // Only one scalar is used, so the face, skull opening and machinery can never
@@ -38,6 +41,9 @@ export function BrainStudioShell() {
       offset: [-center.x, 0, -center.z] as const,
     }
   }, [gltf.scene])
+
+  // Fit the untouched original, then swap only geometry for distant viewing.
+  useSmallPropLod(prepared.object, REALTIME_MODEL_URL)
 
   return (
     <group

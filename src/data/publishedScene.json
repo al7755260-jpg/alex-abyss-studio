@@ -353,7 +353,7 @@
     "sanityLabel": "SAN值",
     "rotateHint": "拖动 旋转",
     "zoomHint": "滚轮 缩放",
-    "exploreHint": "点击发光线索 探索",
+    "exploreHint": "点击场景作品 浏览",
     "resetCameraLabel": "镜头归中",
     "backToStudioLabel": "返回书房",
     "undiscoveredRelicLabel": "未归档",

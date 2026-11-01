@@ -928,104 +928,6 @@ button:focus-visible {
     visibility 0s linear 0s;
 }
 
-.object-callout__linework {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  shape-rendering: geometricPrecision;
-}
-
-.object-callout__path {
-  fill: none;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
-}
-
-.object-callout__path--aura,
-.object-callout__path--main {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  transition: stroke-dashoffset 280ms cubic-bezier(.22, .8, .2, 1);
-}
-
-.object-callout__path--aura {
-  stroke: color-mix(in srgb, var(--callout-accent) 72%, var(--blood));
-  stroke-width: 5px;
-  opacity: .2;
-  filter: blur(3px);
-}
-
-.object-callout__path--main {
-  stroke: rgb(208 193 160 / 82%);
-  stroke-width: 1.35px;
-  filter: drop-shadow(0 0 3px rgb(60 115 103 / 34%));
-}
-
-.object-callout__path--tracer {
-  stroke: color-mix(in srgb, var(--callout-accent) 64%, #d5b16f);
-  stroke-width: 2px;
-  stroke-dasharray: .055 .945;
-  stroke-dashoffset: 1;
-  opacity: 0;
-}
-
-.object-callout--active[data-projected="true"] .object-callout__path--aura,
-.object-callout--active[data-projected="true"] .object-callout__path--main {
-  stroke-dashoffset: 0;
-}
-
-.object-callout--active[data-projected="true"] .object-callout__path--tracer {
-  opacity: .78;
-  animation: object-callout-tracer 2.8s .32s linear infinite;
-}
-
-.object-callout__anchor {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: block;
-  width: 12px;
-  height: 12px;
-  margin: -6px 0 0 -6px;
-  border: 1px solid rgb(223 204 165 / 90%);
-  background: rgb(7 20 18 / 78%);
-  box-shadow:
-    0 0 0 3px rgb(8 17 15 / 68%),
-    0 0 14px color-mix(in srgb, var(--callout-accent) 72%, transparent);
-  opacity: 0;
-  transition: opacity 120ms ease;
-  will-change: transform;
-}
-
-.object-callout__anchor::before,
-.object-callout__anchor::after {
-  position: absolute;
-  content: "";
-}
-
-.object-callout__anchor::before {
-  inset: 3px;
-  background: color-mix(in srgb, var(--callout-accent) 76%, #d9c18f);
-  box-shadow: 0 0 7px var(--callout-accent);
-}
-
-.object-callout__anchor::after {
-  inset: -5px;
-  border: 1px solid rgb(194 149 83 / 24%);
-}
-
-.object-callout--active[data-projected="true"] .object-callout__anchor {
-  opacity: 1;
-}
-
-.object-callout--active[data-projected="true"] .object-callout__anchor::before {
-  animation: object-callout-anchor-pulse 2.8s ease-in-out infinite;
-}
-
 .object-callout__panel {
   --callout-panel-x: 0px;
   --callout-panel-y: 0px;
@@ -1191,16 +1093,6 @@ button:focus-visible {
   opacity: 0;
 }
 
-@keyframes object-callout-tracer {
-  from { stroke-dashoffset: 1; }
-  to { stroke-dashoffset: 0; }
-}
-
-@keyframes object-callout-anchor-pulse {
-  0%, 100% { opacity: .68; transform: scale(.78); }
-  50% { opacity: 1; transform: scale(1.15); }
-}
-
 @media (max-width: 720px), (max-height: 500px) and (max-width: 900px) {
   .object-callout__panel {
     grid-template-columns: 20px minmax(0, 1fr);
@@ -1223,24 +1115,17 @@ button:focus-visible {
     height: 12px;
   }
 
-  .object-callout__path--main { stroke-width: 1.15px; }
-  .object-callout__path--aura { stroke-width: 4px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .object-callout,
-  .object-callout__path,
-  .object-callout__anchor,
   .object-callout__panel {
     animation: none !important;
     transition-duration: 0ms !important;
     transition-delay: 0ms !important;
   }
 
-  .object-callout__path--tracer,
-  .object-callout__anchor::before {
-    animation: none !important;
-  }
+
 }
 
 /* ── Three-click desk grimoire ─────────────────────────────────────────── */
